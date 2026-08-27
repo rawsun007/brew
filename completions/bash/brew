@@ -1616,6 +1616,22 @@ _brew_fetch() {
   __brew_complete_casks
 }
 
+_brew_find_appcast() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  case "${cur}" in
+    -*)
+      __brewcomp "
+      --debug
+      --help
+      --quiet
+      --verbose
+      "
+      return
+      ;;
+    *) ;;
+  esac
+}
+
 _brew_formula() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   case "${cur}" in
@@ -3834,6 +3850,7 @@ _brew() {
     exec) _brew_exec ;;
     extract) _brew_extract ;;
     fetch) _brew_fetch ;;
+    find-appcast) _brew_find_appcast ;;
     formula) _brew_formula ;;
     formula-analytics) _brew_formula_analytics ;;
     formulae) _brew_formulae ;;

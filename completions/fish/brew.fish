@@ -1096,6 +1096,13 @@ __fish_brew_complete_arg 'fetch; and not __fish_seen_argument -l cask -l casks' 
 __fish_brew_complete_arg 'fetch; and not __fish_seen_argument -l formula -l formulae' -a '(__fish_brew_suggest_casks_all)'
 
 
+__fish_brew_complete_cmd 'find-appcast' 'Find the appcast of the app bundle at app_path, e.g'
+__fish_brew_complete_arg 'find-appcast' -l debug -d 'Display any debugging information'
+__fish_brew_complete_arg 'find-appcast' -l help -d 'Show this message'
+__fish_brew_complete_arg 'find-appcast' -l quiet -d 'Make some output more quiet'
+__fish_brew_complete_arg 'find-appcast' -l verbose -d 'Make some output more verbose'
+
+
 __fish_brew_complete_cmd 'formula' 'Display the path where formula is located'
 __fish_brew_complete_arg 'formula' -l debug -d 'Display any debugging information'
 __fish_brew_complete_arg 'formula' -l help -d 'Show this message'

@@ -2150,6 +2150,10 @@ Extract the specified \fIversion\fP of \fIformula\fP instead of the most recent\
 .TP
 \fB\-f\fP, \fB\-\-force\fP
 Overwrite the destination formula if it already exists\.
+.SS "\fBfind\-appcast\fP \fIapp_path\fP"
+Find the appcast of the app bundle at \fIapp_path\fP, e\.g\. for use in a cask \fBlivecheck\fP block\.
+.P
+Checks for a Sparkle \fBSUFeedURL\fP and Electron Builder update metadata\.
 .SS "\fBformula\fP \fIformula\fP \fR[\.\.\.]"
 Display the path where \fIformula\fP is located\.
 .SS "\fBgenerate\-cask\-token\fP \fIapp_or_name\fP"

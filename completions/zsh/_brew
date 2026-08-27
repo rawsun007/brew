@@ -198,6 +198,7 @@ __brew_internal_commands() {
     'exec:Run command in an environment populated by Homebrew formulae'
     'extract:Look through repository history to find the most recent version of formula and create a copy in tap'
     'fetch:Download a bottle (if available) or source packages for formulae and binaries for casks'
+    'find-appcast:Find the appcast of the app bundle at app_path, e.g'
     'formula:Display the path where formula is located'
     'formulae:List all locally installable formulae including short names'
     'generate-cask-token:Generate a cask token, filename and header line for an application, following the token conventions described in the Cask Cookbook'
@@ -1440,6 +1441,15 @@ _brew_fetch() {
     - cask \
     '(--HEAD --deps -s --build-bottle --force-bottle --bottle-tag --formula)--cask[Treat all named arguments as casks]' \
     '*:cask:__brew_casks'
+}
+
+# brew find-appcast
+_brew_find_appcast() {
+  _arguments \
+    '--debug[Display any debugging information]' \
+    '--help[Show this message]' \
+    '--quiet[Make some output more quiet]' \
+    '--verbose[Make some output more verbose]'
 }
 
 # brew formula

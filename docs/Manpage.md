@@ -3407,6 +3407,13 @@ form of *`user`*`/`*`repo`*`/`*`formula`*.
 
 : Overwrite the destination formula if it already exists.
 
+### `find-appcast` *`app_path`*
+
+Find the appcast of the app bundle at *`app_path`*, e.g. for use in a cask
+`livecheck` block.
+
+Checks for a Sparkle `SUFeedURL` and Electron Builder update metadata.
+
 ### `formula` *`formula`* \[...\]
 
 Display the path where *`formula`* is located.

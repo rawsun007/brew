@@ -40,6 +40,7 @@ edit
 exec
 extract
 fetch
+find-appcast
 formula
 formulae
 generate-cask-token
