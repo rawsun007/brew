@@ -1463,6 +1463,8 @@ brew generate-cask-token "/full/path/to/Software.app"
 brew generate-cask-token "Software Name"
 ```
 
+`brew create --cask <url>` also uses these rules to generate the token from the cask name.
+
 * [Purpose](#purpose)
 * [Finding the simplified name of the vendor’s distribution](#finding-the-simplified-name-of-the-vendors-distribution)
 * [Converting the simplified name to a token](#converting-the-simplified-name-to-a-token)

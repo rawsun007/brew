@@ -4,7 +4,9 @@
 require "formula"
 require "formula_creator"
 require "missing_formula"
+require "cask/appcast"
 require "cask/cask_loader"
+require "cask/token_generator"
 require "downloadable"
 
 module Homebrew
@@ -93,7 +95,8 @@ module Homebrew
         else
           args.set_name
         end
-        token = Cask::Utils.token_from(T.must(name))
+        token = cask_token_from(T.must(name))
+        Cask::TokenGenerator.warnings(token).each { |warning| opoo warning }
 
         cask_tap = Tap.fetch(args.tap || "homebrew/cask")
         raise TapUnavailableError, cask_tap.name unless cask_tap.installed?
@@ -123,6 +126,9 @@ module Homebrew
           [url.gsub(version.to_s, "\#{version}"), sha256]
         end
 
+        appcast = find_appcast_for(T.must(name))
+        livecheck_strategy = appcast ? appcast.strategy.inspect : "\"\""
+
         cask_path.atomic_write <<~RUBY
           # Documentation: https://docs.brew.sh/Cask-Cookbook
           # PLEASE REMOVE ALL GENERATED COMMENTS BEFORE SUBMITTING YOUR PULL REQUEST!
@@ -137,8 +143,8 @@ module Homebrew
 
             # Documentation: https://docs.brew.sh/Brew-Livecheck
             livecheck do
-              url ""
-              strategy ""
+              url "#{appcast&.url}"
+              strategy #{livecheck_strategy}
             end
 
             depends_on macos: ""
@@ -152,6 +158,28 @@ module Homebrew
 
         puts "Please run `brew audit --cask --new #{token}` before submitting, thanks."
         cask_path
+      end
+
+      # Generate a token from the name using the documented token conventions,
+      # preserving any `@<version>`/`@<channel>` suffix.
+      sig { params(name: String).returns(String) }
+      def cask_token_from(name)
+        base, at, suffix = name.rpartition("@")
+        return Cask::TokenGenerator.generate(name) if at.empty?
+
+        "#{Cask::TokenGenerator.generate(base)}@#{suffix.downcase}"
+      end
+
+      # Scan an already-installed copy of the app for an appcast to prefill
+      # the `livecheck` block.
+      sig { params(name: String).returns(T.nilable(Cask::Appcast::Result)) }
+      def find_appcast_for(name)
+        app_path = Pathname("/Applications/#{name}.app")
+        return unless app_path.directory?
+
+        appcast = Cask::Appcast.find(app_path)
+        ohai "Found #{appcast.strategy.inspect} appcast: #{appcast.url}" if appcast
+        appcast
       end
 
       sig { returns(Pathname) }
