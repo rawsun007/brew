@@ -968,24 +968,22 @@ The easiest and most useful `uninstall` directive is [`pkgutil:`](#uninstall-pkg
 
 Each `uninstall` technique is applied according to the order above. The order in which `uninstall` keys appear in the cask file is ignored.
 
-For assistance filling in the right values for `uninstall` keys, there are several helper [commands found under `cmd`](https://github.com/Homebrew/homebrew-cask/tree/HEAD/cmd) and [scripts found under `developer/bin`](https://github.com/Homebrew/homebrew-cask/tree/HEAD/developer/bin) in the `homebrew/cask` repository. Many support `--help` (or otherwise print usage) with additional documentation.
-
 Working out an `uninstall` stanza is easiest when done on a system where the package is currently installed and operational. To operate on an uninstalled `.pkg` file, see [Working with a `.pkg` file manually](#working-with-a-pkg-file-manually), below.
 
 #### `uninstall` *pkgutil*
 
 This is the most useful uninstall key. `pkgutil:` is often sufficient to completely uninstall a `pkg`, and is strongly preferred over `delete:`.
 
-IDs for the most recently installed packages can be listed using [`brew list-recent-pkg-ids`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-recent-pkg-ids.rb):
+IDs for currently installed packages can be listed using the macOS `pkgutil` command:
 
 ```bash
-brew list-recent-pkg-ids
+pkgutil --pkgs
 ```
 
-`pkgutil:` also accepts a regular expression to match against multiple package IDs. The regular expressions are somewhat nonstandard. To test a `pkgutil:` regular expression against currently installed packages, use [`brew list-pkg-ids-by-regexp`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-pkg-ids-by-regexp.rb):
+`pkgutil:` also accepts a regular expression to match against multiple package IDs. The regular expressions are somewhat nonstandard. To test a `pkgutil:` regular expression against currently installed packages, pass it to `pkgutil --pkgs`:
 
 ```bash
-brew list-pkg-ids-by-regexp <regular-expression>
+pkgutil --pkgs=<regular-expression>
 ```
 
 #### List files associated with a package ID
@@ -1000,16 +998,18 @@ Listing the associated files can help you assess whether the package included an
 
 #### `uninstall` *launchctl*
 
-IDs for currently loaded `launchd` jobs can be listed using [`brew list-loaded-launchjob-ids`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-loaded-launchjob-ids.rb):
+IDs for currently loaded `launchd` jobs can be listed using the macOS `launchctl` command (run it with `sudo` to list system daemons):
 
 ```bash
-brew list-loaded-launchjob-ids
+launchctl list
 ```
 
-IDs for all installed `launchd` jobs can be listed using [`brew list-installed-launchjob-ids`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-installed-launchjob-ids.rb):
+IDs for all installed `launchd` jobs are given by the `Label` value of the `.plist` files installed in `/Library/LaunchAgents`, `/Library/LaunchDaemons` and `~/Library/LaunchAgents`:
 
 ```bash
-brew list-installed-launchjob-ids
+for plist in /Library/Launch{Agents,Daemons}/*.plist ~/Library/LaunchAgents/*.plist; do
+  /usr/libexec/PlistBuddy -c "Print Label" "$plist"
+done
 ```
 
 #### `uninstall` *quit*
@@ -1022,17 +1022,19 @@ Matching ignores case, as it does for an exact bundle ID, and `*` is the only sp
 A wildcard needs at least three dot-separated parts of an ID to match on, so an overly broad pattern such as `com.*` is rejected by `brew style`.
 Wildcards match nothing when not logged into a GUI, as the list of running applications is unavailable.
 
-Bundle IDs for currently running applications can be listed using [`brew list-running-app-ids`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-running-app-ids.rb):
+Bundle IDs for currently running applications can be listed using `osascript`:
 
 ```bash
-brew list-running-app-ids
+osascript -e 'tell application "System Events" to get the bundle identifier of every application process'
 ```
 
-Bundle IDs inside an application bundle on disk can be listed using [`brew list-ids-in-app`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-ids-in-app.rb):
+The main bundle ID of an application bundle on disk can be read from its `Info.plist`:
 
 ```bash
-brew list-ids-in-app '/path/to/application.app'
+defaults read '/path/to/application.app/Contents/Info' CFBundleIdentifier
 ```
+
+An application may contain additional nested bundles (helpers, launch agents, etc.) with their own bundle IDs; these can be found by running the same command against each `Info.plist` located with `find '/path/to/application.app' -name Info.plist`.
 
 #### `uninstall` *signal*
 
@@ -1081,26 +1083,26 @@ uninstall quit:       "com.example.app",
 
 #### `uninstall` *login_item*
 
-Login items associated with an application bundle on disk can be listed using [`brew list-login-items-for-app`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-login-items-for-app.rb):
+Currently installed login items can be listed using `osascript`:
 
 ```bash
-brew list-login-items-for-app '/path/to/application.app'
+osascript -e 'tell application "System Events" to get the name of every login item'
 ```
 
 Note that you will likely need to have opened the app at least once for any login items to be present.
 
 #### `uninstall` *kext*
 
-IDs for currently loaded kernel extensions can be listed using [`list_loaded_kext_ids`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/developer/bin/list_loaded_kext_ids):
+IDs for currently loaded kernel extensions can be listed using the macOS `kextstat` command:
 
 ```bash
-"$(brew --repository homebrew/cask)/developer/bin/list_loaded_kext_ids"
+kextstat -kl | awk '{ print $6 }'
 ```
 
-IDs inside a kext bundle on disk can be listed using [`list_id_in_kext`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/developer/bin/list_id_in_kext):
+The ID of a kext bundle on disk can be read from its `Info.plist`:
 
 ```bash
-"$(brew --repository homebrew/cask)/developer/bin/list_id_in_kext" '/path/to/name.kext'
+defaults read '/path/to/name.kext/Contents/Info' CFBundleIdentifier
 ```
 
 #### `uninstall` *script*
@@ -1151,25 +1153,20 @@ To remove user-specific files, use the [`zap`](#stanza-zap) stanza.
 
 Advanced users may wish to work with a `.pkg` file manually, without having the package installed.
 
-A list of files which may be installed from a `.pkg` can be extracted using [`list_payload_in_pkg`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/developer/bin/list_payload_in_pkg):
+For a flat component package, a list of files which may be installed from a `.pkg` can be extracted using the macOS `pkgutil` command:
 
 ```bash
-"$(brew --repository homebrew/cask)/developer/bin/list_payload_in_pkg" '/path/to/my.pkg'
+pkgutil --payload-files '/path/to/my.pkg'
 ```
 
-Candidate application names helpful for determining the name of a cask may be extracted from a `.pkg` file using [`brew list-apps-in-pkg`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-apps-in-pkg.rb):
+Many `.pkg` files are distribution archives containing nested component packages, for which the above only lists a partial payload (or none at all). Expand the archive and list the contents of each component package's bill of materials instead:
 
 ```bash
-brew list-apps-in-pkg '/path/to/my.pkg'
+pkgutil --expand '/path/to/my.pkg' /tmp/expanded.unpkg
+lsbom -s /tmp/expanded.unpkg/*.pkg/Bom
 ```
 
-Candidate package IDs which may be useful in a `pkgutil:` key may be extracted from a `.pkg` file using [`brew list-ids-in-pkg`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-ids-in-pkg.rb):
-
-```bash
-brew list-ids-in-pkg '/path/to/my.pkg'
-```
-
-A fully manual method for finding bundle IDs in a package file follows:
+Candidate package IDs which may be useful in a `pkgutil:` key can be found by unpacking the package file manually, as follows:
 
 1. Unpack `/path/to/my.pkg` (replace with your package name) with `pkgutil --expand /path/to/my.pkg /tmp/expanded.unpkg`.
 2. The unpacked package is a folder. Bundle IDs are contained within files named `PackageInfo`. These files can be found with the command `find /tmp/expanded.unpkg -name PackageInfo`.
@@ -1198,10 +1195,10 @@ When a plain URL string is insufficient to fetch a file, additional information 
 
 #### Difficulty finding a URL
 
-Web browsers may obscure the direct `url` of a download for a variety of reasons. The `homebrew/cask` repository provides a [`brew list-url-attributes-on-file`](https://github.com/Homebrew/homebrew-cask/blob/HEAD/cmd/list-url-attributes-on-file.rb) command which can read extended file attributes to extract the actual source URL of most files downloaded by a browser on macOS. The command usually emits multiple candidate URLs; you may have to test each of them:
+Web browsers may obscure the direct `url` of a download for a variety of reasons. The actual source URL of most files downloaded by a browser on macOS is recorded in the file's extended metadata, which can be read using the macOS `mdls` command. It usually emits multiple candidate URLs; you may have to test each of them:
 
 ```bash
-brew list-url-attributes-on-file <file>
+mdls -name kMDItemWhereFroms '<file>'
 ```
 
 #### Subversion URLs
@@ -1347,7 +1344,6 @@ The simplest method is to use `brew generate-zap`, which scans the system for as
 
 Manual creation can be facilitated with:
 
-* Some of the [helper scripts found under `developer/bin`](https://github.com/Homebrew/homebrew-cask/tree/HEAD/developer/bin)
 * `sudo find / -iname "*<search item>*"`
 * An uninstaller tool such as [AppCleaner](https://formulae.brew.sh/cask/appcleaner)
 * Inspection of the usual paths, i.e. `/Library/{'Application Support',LaunchAgents,LaunchDaemons,Frameworks,Logs,Preferences,PrivilegedHelperTools}` and `~/Library/{'Application Support',Caches,Containers,LaunchAgents,Logs,Preferences,'Saved Application State'}`
@@ -1459,13 +1455,7 @@ Variables and methods should not be defined outside the `Utils` namespace, as th
 
 ## Token reference
 
-This section describes the algorithm implemented in the `generate_cask_token` script and covers detailed rules and exceptions that are not needed in most cases.
-Generate a token from the installed app bundle or the software's full name with:
-
-```sh
-"$(brew --repository homebrew/cask)/developer/bin/generate_cask_token" "/full/path/to/Software.app"
-"$(brew --repository homebrew/cask)/developer/bin/generate_cask_token" "Software Name"
-```
+This section describes the algorithm for generating a cask token and covers detailed rules and exceptions that are not needed in most cases.
 
 * [Purpose](#purpose)
 * [Finding the simplified name of the vendor’s distribution](#finding-the-simplified-name-of-the-vendors-distribution)
