@@ -42,6 +42,7 @@ extract
 fetch
 formula
 formulae
+generate-cask-token
 generate-man-completions
 generate-zap
 gist-logs

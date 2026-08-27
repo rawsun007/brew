@@ -1170,6 +1170,13 @@ __fish_brew_complete_arg 'generate-cask-ci-matrix' -l verbose -d 'Make some outp
 __fish_brew_complete_arg 'generate-cask-ci-matrix' -a '(__fish_brew_suggest_casks_all)'
 
 
+__fish_brew_complete_cmd 'generate-cask-token' 'Generate a cask token, filename and header line for an application, following the token conventions described in the Cask Cookbook'
+__fish_brew_complete_arg 'generate-cask-token' -l debug -d 'Display any debugging information'
+__fish_brew_complete_arg 'generate-cask-token' -l help -d 'Show this message'
+__fish_brew_complete_arg 'generate-cask-token' -l quiet -d 'Make some output more quiet'
+__fish_brew_complete_arg 'generate-cask-token' -l verbose -d 'Make some output more verbose'
+
+
 complete -f -c brew -n 'not __fish_brew_command; and set -q HOMEBREW_DEVELOPER' -a 'generate-formula-api' -d 'Generate `homebrew/core` API data files for https://formulae.brew.sh'
 __fish_brew_complete_arg 'generate-formula-api' -l debug -d 'Display any debugging information'
 __fish_brew_complete_arg 'generate-formula-api' -l dry-run -d 'Generate API data without writing it to files'

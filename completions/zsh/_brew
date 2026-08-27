@@ -200,6 +200,7 @@ __brew_internal_commands() {
     'fetch:Download a bottle (if available) or source packages for formulae and binaries for casks'
     'formula:Display the path where formula is located'
     'formulae:List all locally installable formulae including short names'
+    'generate-cask-token:Generate a cask token, filename and header line for an application, following the token conventions described in the Cask Cookbook'
     'generate-man-completions:Generate Homebrew'\''s manpages and shell completions'
     'generate-zap:Generate a `zap` stanza for a cask by scanning the system for associated files and directories'
     'gist-logs:Upload logs for a failed build of formula to a new Gist'
@@ -1529,6 +1530,15 @@ _brew_generate_cask_ci_matrix() {
     - cask \
     '(--url)--cask[Treat all named arguments as cask tokens]' \
     '*:cask:__brew_casks'
+}
+
+# brew generate-cask-token
+_brew_generate_cask_token() {
+  _arguments \
+    '--debug[Display any debugging information]' \
+    '--help[Show this message]' \
+    '--quiet[Make some output more quiet]' \
+    '--verbose[Make some output more verbose]'
 }
 
 # brew generate-formula-api

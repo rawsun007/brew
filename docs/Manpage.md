@@ -3411,6 +3411,15 @@ form of *`user`*`/`*`repo`*`/`*`formula`*.
 
 Display the path where *`formula`* is located.
 
+### `generate-cask-token` *`app_or_name`*
+
+Generate a cask token, filename and header line for an application, following
+the token conventions described in the Cask Cookbook.
+
+The argument may be either a path to an application bundle (e.g.
+`/Applications/Example App.app`) or the vendor's name for the software (e.g.
+`Example App`).
+
 ### `generate-man-completions` \[`--no-exit-code`\]
 
 Generate Homebrew's manpages and shell completions.

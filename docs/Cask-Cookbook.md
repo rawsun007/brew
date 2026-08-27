@@ -1455,7 +1455,13 @@ Variables and methods should not be defined outside the `Utils` namespace, as th
 
 ## Token reference
 
-This section describes the algorithm for generating a cask token and covers detailed rules and exceptions that are not needed in most cases.
+This section describes the algorithm implemented by `brew generate-cask-token` and covers detailed rules and exceptions that are not needed in most cases.
+Generate a token from the installed app bundle or the software's full name with:
+
+```sh
+brew generate-cask-token "/full/path/to/Software.app"
+brew generate-cask-token "Software Name"
+```
 
 * [Purpose](#purpose)
 * [Finding the simplified name of the vendor’s distribution](#finding-the-simplified-name-of-the-vendors-distribution)
