@@ -25,7 +25,7 @@ module Homebrew
       sig { override.void }
       def run
         if args.no_named?
-          exec_browser HOMEBREW_WWW
+          Homebrew.exec_browser HOMEBREW_WWW
           return
         end
 
@@ -36,7 +36,7 @@ module Homebrew
           formula_or_cask.homepage
         end
 
-        exec_browser(*homepages)
+        Homebrew.exec_browser(*homepages)
       end
 
       private

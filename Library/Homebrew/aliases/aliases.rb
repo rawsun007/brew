@@ -81,7 +81,7 @@ module Homebrew
 
     sig { void }
     def self.edit_all
-      exec_editor(*Dir[HOMEBREW_ALIASES])
+      Homebrew.exec_editor(*Dir[HOMEBREW_ALIASES])
     end
   end
 end

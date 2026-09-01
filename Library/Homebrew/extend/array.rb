@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "utils/output"
+
 class Array
   # Equal to `self[1]`.
   #
@@ -91,16 +93,9 @@ class Array
   #   in arrays with two elements (default: `" and "`).
   sig { params(words_connector: String, two_words_connector: String, last_word_connector: String).returns(String) }
   def to_sentence(words_connector: ", ", two_words_connector: " and ", last_word_connector: " and ")
-    case length
-    when 0
-      +""
-    when 1
-      # This is not typesafe, if the array contains a BasicObject
-      +T.unsafe(self[0]).to_s
-    when 2
-      "#{self[0]}#{two_words_connector}#{self[1]}"
-    else
-      "#{T.must(self[0...-1]).join(words_connector)}#{last_word_connector}#{self[-1]}"
-    end
+    Utils::Output.odeprecated "Array#to_sentence", "Homebrew.to_sentence"
+    require "homebrew"
+
+    Homebrew.to_sentence(self, words_connector:, two_words_connector:, last_word_connector:)
   end
 end

@@ -1800,9 +1800,7 @@ RSpec.describe FormulaInstaller do
       expect(sandbox).to receive(:allow_read_if_exists).with(path: formula_path).ordered
       expect(sandbox).to receive(:allow_read_if_exists).with(path: Homebrew::Trust.trust_file).ordered
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        installer.build
-      end
+      installer.build
     end
   end
 end

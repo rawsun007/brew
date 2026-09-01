@@ -73,7 +73,7 @@ module Homebrew
         publish_args << "--workflow=#{args.workflow}" if args.workflow
         publish_args << "--autosquash" if args.autosquash?
         if args.publish?
-          safe_system HOMEBREW_BREW_FILE, *publish_args, *pr_urls
+          Homebrew.safe_system_brew(*publish_args, *pr_urls)
         else
           ohai "Now run:", "  brew #{publish_args.join " "} \\\n    #{pr_urls.join " \\\n    "}"
         end

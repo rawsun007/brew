@@ -80,7 +80,7 @@ module Homebrew
         vendor_python.children.reject { |path| path == venv_root }.each(&:rmtree) if vendor_python.exist?
 
         with_env(UV_PROJECT_ENVIRONMENT: venv_root.to_s) do
-          safe_system uv, "sync", "--frozen", "--project", formula_analytics_root, out: :err
+          Homebrew.safe_system uv, "sync", "--frozen", "--project", formula_analytics_root, out: :err
         end
       end
 
@@ -142,7 +142,7 @@ module Homebrew
         require "json"
 
         if args.setup?
-          safe_system venv_python, influxdb_query_script, "--check"
+          Homebrew.safe_system venv_python, influxdb_query_script, "--check"
           return
         end
 

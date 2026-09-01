@@ -15,7 +15,7 @@ module Homebrew
       def run
         require "cask/cask"
 
-        puts Cask::Cask.all(eval_all: true).flat_map { |cask| [cask.full_name, cask.token] }.uniq.sort
+        puts Cask::Cask.all.flat_map { |cask| [cask.full_name, cask.token] }.uniq.sort
       end
     end
   end

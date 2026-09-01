@@ -438,8 +438,8 @@ module Cask
       caller_location = caller_locations.fetch(0)
       return @url unless uri
 
-      # Keep accepting `verified` as a no-op for compatibility with existing casks.
-      # odeprecated "the `verified` parameter in the `url` stanza" if options[:verified]
+      odeprecated "the `verified` parameter in the `url` stanza", "the default URL verification behaviour" if
+        options[:verified]
 
       set_unique_stanza(:url, false) do
         URL.new(uri, **options, caller_location:)
@@ -855,7 +855,7 @@ module Cask
       [klass.dsl_key, klass.uninstall_dsl_key].each do |dsl_key|
         define_method(dsl_key) do |&block|
           T.bind(self, DSL)
-          # odeprecated "`#{dsl_key}`", "`#{dsl_key}_steps`"
+          odeprecated "`#{dsl_key}`", "`#{dsl_key}_steps`"
           artifacts.add(klass.new(cask, dsl_key => block))
         end
       end
@@ -915,8 +915,6 @@ module Cask
       if !@cask.allow_reassignment && no_autobump_defined?
         raise CaskInvalidError.new(cask, "'no_autobump!' stanza may only appear once.")
       end
-
-      odisabled "no_autobump! because: :requires_manual_review" if because == :requires_manual_review
 
       @no_autobump_defined = true
       @no_autobump_message = because

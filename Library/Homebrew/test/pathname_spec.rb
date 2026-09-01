@@ -57,23 +57,12 @@ RSpec.describe Pathname do
   end
 
   describe "#rmdir_if_possible" do
-    before { mkdir_p dir }
+    it "deprecates the Pathname helper" do
+      expect(Utils::Output).to receive(:odeprecated)
+        .with("Pathname#rmdir_if_possible", "Utils::Path.rmdir_if_possible")
+      expect(Utils::Path).to receive(:rmdir_if_possible).with(dir).and_return(true)
 
-    it "returns true and removes a directory if it doesn't contain files" do
-      expect(dir.rmdir_if_possible).to be true
-      expect(dir).not_to exist
-    end
-
-    it "returns false and doesn't delete a directory if it contains files" do
-      touch dir/"foo"
-      expect(dir.rmdir_if_possible).to be false
-      expect(dir).to be_a_directory
-    end
-
-    it "ignores .DS_Store files" do
-      touch dir/".DS_Store"
-      expect(dir.rmdir_if_possible).to be true
-      expect(dir).not_to exist
+      expect(dir.rmdir_if_possible).to be(true)
     end
   end
 
@@ -123,15 +112,42 @@ RSpec.describe Pathname do
   end
 
   describe "#ensure_writable" do
-    it "makes a file writable and restores permissions afterwards" do
-      skip "User is root so everything is writable." if Process.euid.zero?
-      touch file
-      chmod 0555, file
-      expect(file).not_to be_writable
-      file.ensure_writable do
-        expect(file).to be_writable
-      end
-      expect(file).not_to be_writable
+    it "deprecates the Pathname helper" do
+      expect(Utils::Output).to receive(:odeprecated)
+        .with("Pathname#ensure_writable", "Utils::Path.ensure_writable")
+      expect(Utils::Path).to receive(:ensure_writable).with(file).and_yield
+
+      file.ensure_writable { nil }
+    end
+  end
+
+  describe "#text_executable?" do
+    it "deprecates the Pathname helper" do
+      expect(Utils::Output).to receive(:odeprecated)
+        .with("Pathname#text_executable?", "Utils::Path.text_executable?")
+      expect(Utils::Path).to receive(:text_executable?).with(file).and_return(true)
+
+      expect(file.text_executable?).to be(true)
+    end
+  end
+
+  describe "#resolved_path" do
+    it "deprecates the Pathname helper" do
+      expect(Utils::Output).to receive(:odeprecated)
+        .with("Pathname#resolved_path", "Utils::Path.resolved_path")
+      expect(Utils::Path).to receive(:resolved_path).with(file).and_return(file)
+
+      expect(file.resolved_path).to eq(file)
+    end
+  end
+
+  describe "#resolved_path_exists?" do
+    it "deprecates the Pathname helper" do
+      expect(Utils::Output).to receive(:odeprecated)
+        .with("Pathname#resolved_path_exists?", "Utils::Path.resolved_path_exists?")
+      expect(Utils::Path).to receive(:resolved_path_exists?).with(file).and_return(true)
+
+      expect(file.resolved_path_exists?).to be(true)
     end
   end
 

@@ -32,7 +32,7 @@ RSpec.describe Utils::Service do
       end
       allow(described_class).to receive_messages(launchctl: nil, systemctl?: true,
                                                  systemctl: Pathname("/bin/systemctl"))
-      expect(described_class).to receive(:quiet_system)
+      expect(Homebrew).to receive(:quiet_system)
         .with(instance_of(Pathname), "is-active", "--quiet", f.service_name)
         .and_return(true)
       expect(described_class.running?(f)).to be true

@@ -9,6 +9,7 @@ require "cask/dsl"
 require "cask/metadata"
 require "cask/tab"
 require "utils/output"
+require "utils/path"
 require "api_hashable"
 require "trust"
 
@@ -51,14 +52,8 @@ module Cask
     sig { returns(T::Boolean) }
     attr_accessor :allow_reassignment
 
-    sig { params(eval_all: T::Boolean).returns(T::Array[Cask]) }
-    def self.all(eval_all: false)
-      if !eval_all && !Homebrew::EnvConfig.tap_trust_configured?
-        raise ArgumentError,
-              "Cask::Cask#all cannot be used without `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-              "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1`"
-      end
-
+    sig { returns(T::Array[Cask]) }
+    def self.all
       # Load core casks from tokens so they load from the API when the core cask is not tapped.
       tokens_and_files = CoreCaskTap.instance.cask_tokens
       tokens_and_files += Tap.reject(&:core_cask_tap?).flat_map(&:cask_files)
@@ -321,7 +316,7 @@ module Cask
     sig { void }
     def unpin
       pin_path.unlink if pin_path.symlink?
-      HOMEBREW_PINNED_CASKS.rmdir_if_possible
+      ::Utils::Path.rmdir_if_possible(HOMEBREW_PINNED_CASKS)
     end
 
     sig { returns(T::Boolean) }
@@ -338,7 +333,7 @@ module Cask
 
     sig { returns(T.nilable(String)) }
     def pinned_version
-      pin_path.resolved_path.basename.to_s if pinned?
+      ::Utils::Path.resolved_path(pin_path).basename.to_s if pinned?
     end
 
     sig { returns(Pathname) }

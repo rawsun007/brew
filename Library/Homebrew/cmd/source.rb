@@ -24,7 +24,7 @@ module Homebrew
       sig { override.void }
       def run
         if args.no_named?
-          exec_browser "https://github.com/Homebrew/brew"
+          Homebrew.exec_browser "https://github.com/Homebrew/brew"
           return
         end
 
@@ -42,7 +42,7 @@ module Homebrew
 
         return if repo_urls.empty?
 
-        exec_browser(*repo_urls)
+        Homebrew.exec_browser(*repo_urls)
       end
 
       sig { params(url: String).returns(T.nilable(String)) }

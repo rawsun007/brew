@@ -117,11 +117,11 @@ module Homebrew
           tap = Tap.fetch("#{username}/homebrew-#{DEFAULT_TAP_REPOSITORY}")
           unless tap.installed?
             ohai "Creating #{tap.name} tap for storing versioned formulae..."
-            safe_system HOMEBREW_BREW_FILE, "tap-new", "--no-git", tap.name
+            Homebrew.safe_system_brew "tap-new", "--no-git", tap.name
           end
 
           ohai "Extracting #{formula_input}@#{version_input} into #{tap.name}..."
-          safe_system HOMEBREW_BREW_FILE, "extract", formula_input, tap.name, "--version=#{version_input}"
+          Homebrew.safe_system_brew "extract", formula_input, tap.name, "--version=#{version_input}"
 
           install_target = "#{tap}/#{versioned_name}"
 
@@ -134,7 +134,7 @@ module Homebrew
         end
 
         ohai "Installing #{install_target}..."
-        safe_system HOMEBREW_BREW_FILE, "install", install_target
+        Homebrew.safe_system_brew "install", install_target
       end
     end
   end

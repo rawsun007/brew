@@ -15,7 +15,7 @@ module Homebrew
       def run
         require "formula"
 
-        puts Formula.all(eval_all: true).flat_map { |formula| [formula.full_name, formula.name] }.uniq.sort
+        puts Formula.all.flat_map { |formula| [formula.full_name, formula.name] }.uniq.sort
       end
     end
   end

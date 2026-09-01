@@ -21,7 +21,7 @@ module Homebrew
         def run
           require "bundle/brewfile"
 
-          exec_editor(Homebrew::Bundle::Brewfile.path(global: context.global, file: context.file))
+          Homebrew.exec_editor(Homebrew::Bundle::Brewfile.path(global: context.global, file: context.file))
         end
       end
     end

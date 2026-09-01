@@ -597,12 +597,12 @@ RSpec.describe "Utils::Curl" do
 
   describe "::curl_supports_tls13?" do
     it "returns `true` if curl command is successful" do
-      allow_any_instance_of(Kernel).to receive(:quiet_system).and_return(true)
+      allow(Homebrew).to receive(:quiet_system).and_return(true)
       expect(curl_supports_tls13?).to be(true)
     end
 
     it "returns `false` if curl command is not successful" do
-      allow_any_instance_of(Kernel).to receive(:quiet_system).and_return(false)
+      allow(Homebrew).to receive(:quiet_system).and_return(false)
       expect(curl_supports_tls13?).to be(false)
     end
   end

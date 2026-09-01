@@ -181,11 +181,9 @@ RSpec.describe Homebrew::Cmd::List do
     RUBY
     (keg/AbstractTab::FILENAME).write JSON.generate(source: { tap: tap.name })
 
-    with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-      expect { described_class.new(["--formula", "--full-name", "-1"]).run }
-        .to output("thirdparty/foo/untrusted\n").to_stdout
-        .and not_to_output.to_stderr
-    end
+    expect { described_class.new(["--formula", "--full-name", "-1"]).run }
+      .to output("thirdparty/foo/untrusted\n").to_stdout
+      .and not_to_output.to_stderr
   ensure
     FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"
   end

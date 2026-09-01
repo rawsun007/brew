@@ -38,12 +38,6 @@ class Homebrew::DevCmd::UpdatePythonResources::Args < Homebrew::CLI::Args
   sig { returns(T::Boolean) }
   def print_only?; end
 
-  sig { returns(T::Boolean) }
-  def s?; end
-
-  sig { returns(T::Boolean) }
-  def silent?; end
-
   sig { returns(T.nilable(String)) }
   def version; end
 end

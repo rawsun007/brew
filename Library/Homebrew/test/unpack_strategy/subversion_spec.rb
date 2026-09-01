@@ -10,8 +10,8 @@ RSpec.describe UnpackStrategy::Subversion, :needs_svnadmin do
   let(:working_copy) { mktmpdir }
 
   before do
-    safe_system "svnadmin", "create", repo
-    safe_system "svn", "checkout", "file://#{repo}", working_copy
+    Homebrew.safe_system "svnadmin", "create", repo
+    Homebrew.safe_system "svn", "checkout", "file://#{repo}", working_copy
 
     FileUtils.touch working_copy/"test"
     system "svn", "add", working_copy/"test"

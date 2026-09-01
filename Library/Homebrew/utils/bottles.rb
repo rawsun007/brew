@@ -37,7 +37,7 @@ module Utils
 
       sig { params(formula: Formula, file: Pathname).returns(T::Boolean) }
       def file_outdated?(formula, file)
-        file = file.resolved_path
+        file = Utils::Path.resolved_path(file)
 
         filename = file.basename.to_s
         bottle = formula.bottle

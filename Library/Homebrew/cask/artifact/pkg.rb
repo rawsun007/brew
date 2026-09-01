@@ -17,8 +17,10 @@ module Cask
 
       sig { params(cask: Cask, path: T.any(String, Pathname), stanza_options: T.untyped).returns(T.attached_class) }
       def self.from_args(cask, path, **stanza_options)
-        # odeprecated: `allow_untrusted` disables certificate verification and is being removed.
-        stanza_options.assert_valid_keys(:allow_untrusted, :choices)
+        if stanza_options.key?(:allow_untrusted)
+          odeprecated "`allow_untrusted` in the `pkg` stanza", "a trusted package"
+        end
+        Homebrew.assert_valid_keys(stanza_options, :allow_untrusted, :choices)
         new(cask, path, **stanza_options)
       end
 
@@ -55,7 +57,7 @@ module Cask
           pkgs = Pathname.glob(cask.staged_path/"**"/"*.pkg").map { |path| path.relative_path_from(cask.staged_path) }
 
           message = "Could not find PKG source file '#{pkg}'"
-          message += ", found #{pkgs.map { |path| "'#{path}'" }.to_sentence} instead" if pkgs.any?
+          message += ", found #{Homebrew.to_sentence(pkgs.map { |path| "'#{path}'" })} instead" if pkgs.any?
           message += "."
 
           raise CaskError, message
@@ -66,8 +68,7 @@ module Cask
           "-target", "/"
         ]
         args << "-verboseR" if verbose
-        # odeprecated: `allow_untrusted` disables certificate verification and is being removed.
-        args << "-allowUntrusted" if stanza_options.fetch(:allow_untrusted, false)
+        args << "-allowUntrusted" if stanza_options[:allow_untrusted]
         with_choices_file do |choices_path|
           args << "-applyChoiceChangesXML" << choices_path if choices_path
 

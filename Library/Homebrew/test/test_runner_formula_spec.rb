@@ -25,10 +25,10 @@ RSpec.describe TestRunnerFormula do
     end
   end
 
-  describe "#eval_all" do
+  describe "#include_uninstalled" do
     specify do
-      expect(described_class.new(testball).eval_all).to be(false)
-      expect(described_class.new(testball, eval_all: true).eval_all).to be(true)
+      expect(described_class.new(testball).include_uninstalled).to be(false)
+      expect(described_class.new(testball, include_uninstalled: true).include_uninstalled).to be(true)
     end
   end
 
@@ -302,15 +302,14 @@ RSpec.describe TestRunnerFormula do
       end
 
       it "returns an array of direct dependents" do
-        allow(Formula).to receive(:all).with(eval_all: true)
-                                       .and_return([testball_user, recursive_testball_dependent])
+        allow(Formula).to receive(:all).and_return([testball_user, recursive_testball_dependent])
 
         expect(
-          described_class.new(testball, eval_all: true).dependents(**current_system).map(&:name),
+          described_class.new(testball, include_uninstalled: true).dependents(**current_system).map(&:name),
         ).to eq(["testball_user"])
 
         expect(
-          described_class.new(testball_user, eval_all: true).dependents(**current_system).map(&:name),
+          described_class.new(testball_user, include_uninstalled: true).dependents(**current_system).map(&:name),
         ).to eq(["recursive_testball_dependent"])
       end
 
@@ -338,7 +337,7 @@ RSpec.describe TestRunnerFormula do
             allow(Formula).to receive(:all).and_wrap_original { testball_and_dependents }
 
             expect(
-              described_class.new(testball, eval_all: true).dependents(
+              described_class.new(testball, include_uninstalled: true).dependents(
                 platform: :linux, arch: :x86_64, macos_version: nil,
               ).map(&:name).sort,
             ).to eq(["testball_user", "testball_user-intel", "testball_user-linux"].sort)
@@ -350,7 +349,7 @@ RSpec.describe TestRunnerFormula do
             allow(Formula).to receive(:all).and_wrap_original { testball_and_dependents }
 
             expect(
-              described_class.new(testball, eval_all: true).dependents(
+              described_class.new(testball, include_uninstalled: true).dependents(
                 platform: :macos, arch: :x86_64, macos_version: nil,
               ).map(&:name).sort,
             ).to eq(["testball_user", "testball_user-intel", "testball_user-macos"].sort)
@@ -362,7 +361,7 @@ RSpec.describe TestRunnerFormula do
             allow(Formula).to receive(:all).and_wrap_original { testball_and_dependents }
 
             expect(
-              described_class.new(testball, eval_all: true).dependents(
+              described_class.new(testball, include_uninstalled: true).dependents(
                 platform: :macos, arch: :arm64, macos_version: nil,
               ).map(&:name).sort,
             ).to eq(["testball_user", "testball_user-arm", "testball_user-macos"].sort)
@@ -374,7 +373,7 @@ RSpec.describe TestRunnerFormula do
             allow(Formula).to receive(:all).and_wrap_original { testball_and_dependents }
 
             expect(
-              described_class.new(testball, eval_all: true).dependents(
+              described_class.new(testball, include_uninstalled: true).dependents(
                 platform: :macos, arch: :x86_64, macos_version: :sonoma,
               ).map(&:name).sort,
             ).to eq(["testball_user", "testball_user-intel", "testball_user-macos"].sort)
@@ -386,7 +385,7 @@ RSpec.describe TestRunnerFormula do
             allow(Formula).to receive(:all).and_wrap_original { testball_and_dependents }
 
             expect(
-              described_class.new(testball, eval_all: true).dependents(
+              described_class.new(testball, include_uninstalled: true).dependents(
                 platform: :macos, arch: :arm64, macos_version: :ventura,
               ).map(&:name).sort,
             ).to eq(%w[testball_user testball_user-arm testball_user-macos testball_user-ventura].sort)

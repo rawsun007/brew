@@ -85,7 +85,7 @@ RSpec.describe Utils do
     it "raises an ErrorDuringExecution on one in the child" do
       expect do
         described_class.safe_fork do
-          safe_system "/usr/bin/false"
+          Homebrew.safe_system "/usr/bin/false"
         end
       end.to raise_error(ErrorDuringExecution)
     end

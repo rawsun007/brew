@@ -57,7 +57,7 @@ module Cask
           )
         end
 
-        args.assert_valid_keys(*VALID_KEYS)
+        Homebrew.assert_valid_keys(args, *VALID_KEYS)
         new(cask, **args)
       end
 

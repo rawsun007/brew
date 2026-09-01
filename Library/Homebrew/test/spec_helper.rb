@@ -260,7 +260,7 @@ RSpec.configure do |config|
     end
 
     svn_shim = HOMEBREW_SHIMS_PATH/"shared/svn"
-    unless quiet_system svn_shim, "--version"
+    unless Homebrew.quiet_system svn_shim, "--version"
       svn_client_skip_reason = "Subversion is not installed."
       ensure_test_dependency!(false, svn_client_skip_reason)
     end

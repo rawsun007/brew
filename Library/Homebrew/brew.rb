@@ -141,19 +141,7 @@ begin
       Utils::Analytics.report_command_run(command_instance)
       command_instance.run
     else
-      Utils::Output.odisabled "Calling `brew #{cmd}` without subclassing `AbstractCommand`",
-                              "subclassing of `Homebrew::AbstractCommand` " \
-                              "(see https://docs.brew.sh/External-Commands)"
-      begin
-        Homebrew.public_send Commands.method_name(cmd)
-      rescue NoMethodError => e
-        converted_cmd = cmd.downcase.tr("-", "_")
-        case_error = "undefined method `#{converted_cmd}' for module Homebrew"
-        private_method_error = "private method `#{converted_cmd}' called for module Homebrew"
-        Utils::Output.odie "Unknown command: brew #{cmd}" if [case_error, private_method_error].include?(e.message)
-
-        raise
-      end
+      Utils::Output.odie "Unknown command: brew #{cmd}"
     end
   elsif external_ruby_cmd_path
     Homebrew.running_command = cmd

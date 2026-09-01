@@ -223,9 +223,13 @@ class Tab < AbstractTab
   def self.for_formula(formula)
     paths = []
 
-    paths << formula.opt_prefix.resolved_path if formula.opt_prefix.symlink? && formula.opt_prefix.directory?
+    if formula.opt_prefix.symlink? && formula.opt_prefix.directory?
+      paths << Utils::Path.resolved_path(formula.opt_prefix)
+    end
 
-    paths << formula.linked_keg.resolved_path if formula.linked_keg.symlink? && formula.linked_keg.directory?
+    if formula.linked_keg.symlink? && formula.linked_keg.directory?
+      paths << Utils::Path.resolved_path(formula.linked_keg)
+    end
 
     if (dirs = formula.installed_prefixes).length == 1
       paths << dirs.first

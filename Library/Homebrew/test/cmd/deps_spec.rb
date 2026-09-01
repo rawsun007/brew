@@ -40,7 +40,7 @@ RSpec.describe Homebrew::Cmd::Deps, :integration_test, :no_api do
     setup_test_formula "installed"
     setup_test_formula "unar"
     expect do
-      brew "deps", "baz", "--include-test", "--missing", "--skip-recommended", "HOMEBREW_REQUIRE_TAP_TRUST" => "1"
+      brew "deps", "baz", "--include-test", "--missing", "--skip-recommended"
     end
       .to be_a_success
       .and output("bar\nfoo\ntest\n").to_stdout

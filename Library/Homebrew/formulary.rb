@@ -614,7 +614,7 @@ module Formulary
         # Only treat symlinks in taps as aliases.
         if path.symlink?
           alias_path = path
-          path = alias_path.resolved_path
+          path = Utils::Path.resolved_path(alias_path)
         end
       else
         # Don't treat cache symlinks as aliases.
@@ -1144,11 +1144,11 @@ module Formulary
 
     # Check whether the rack with the given name exists.
     if (rack = HOMEBREW_CELLAR/File.basename(ref, ".rb")).directory?
-      return rack.resolved_path
+      return Utils::Path.resolved_path(rack)
     end
 
     # Use canonical name to locate rack.
-    (HOMEBREW_CELLAR/canonical_name(ref)).resolved_path
+    Utils::Path.resolved_path(HOMEBREW_CELLAR/canonical_name(ref))
   end
 
   sig { params(ref: String).returns(String) }

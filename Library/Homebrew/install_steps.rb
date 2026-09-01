@@ -28,7 +28,7 @@ module Homebrew
       file = file.realpath if resolve_source
 
       require "macho"
-      file.ensure_writable do
+      Utils::Path.ensure_writable(file) do
         MachO::Tools.change_dylib_id file, id.to_s
         MachO.codesign! file if Hardware::CPU.arm?
       end
@@ -88,9 +88,9 @@ module Homebrew
       sig { returns(Steps) }
       attr_reader :steps
 
-      # odeprecated
       sig { returns(String) }
       def name
+        ::Utils::Output.odeprecated "`name` in an install steps block", "`formula_name`"
         "{{name}}"
       end
 
@@ -225,9 +225,9 @@ module Homebrew
       end
       private_class_method :normalise_path_value
 
-      # odeprecated
       sig { params(path: ::T.any(::String, ::Pathname), base: ::T.nilable(::T.any(::String, ::Symbol))).void }
       def mkdir(path, base: nil)
+        ::Utils::Output.odeprecated "`mkdir` in an install steps block", "`mkdir_p`"
         add_step("mkdir", "path" => path_spec(path, base:, default_base: @default_base))
       end
 
@@ -247,13 +247,14 @@ module Homebrew
           target:      ::T.any(::String, ::Pathname),
           source_base: ::T.nilable(::T.any(::String, ::Symbol)),
           target_base: ::T.nilable(::T.any(::String, ::Symbol)),
-          # odeprecated
           force:       ::T::Boolean,
           overwrite:   ::T::Boolean,
           source_glob: ::T::Boolean,
         ).void
       }
       def move(source, target, source_base: nil, target_base: nil, force: false, overwrite: true, source_glob: false)
+        ::Utils::Output.odeprecated "`force:` in `move`", "`overwrite:` in `move`" if force
+
         add_step("move",
                  "source"      => path_spec(source, base: source_base, default_base: @default_source_base),
                  "target"      => path_spec(target, base: target_base, default_base: @default_target_base),
@@ -262,10 +263,22 @@ module Homebrew
                  "source_glob" => source_glob)
       end
 
-      # odeprecated
-      alias mv move
+      sig {
+        params(
+          source:      ::T.any(::String, ::Pathname),
+          target:      ::T.any(::String, ::Pathname),
+          source_base: ::T.nilable(::T.any(::String, ::Symbol)),
+          target_base: ::T.nilable(::T.any(::String, ::Symbol)),
+          force:       ::T::Boolean,
+          overwrite:   ::T::Boolean,
+          source_glob: ::T::Boolean,
+        ).void
+      }
+      def mv(source, target, source_base: nil, target_base: nil, force: false, overwrite: true, source_glob: false)
+        ::Utils::Output.odeprecated "`mv` in an install steps block", "`move`"
+        move(source, target, source_base:, target_base:, overwrite: overwrite || force, source_glob:)
+      end
 
-      # odeprecated
       sig {
         params(
           source:      ::T.any(::String, ::Pathname),
@@ -275,6 +288,7 @@ module Homebrew
         ).void
       }
       def move_children(source, target, source_base: nil, target_base: nil)
+        ::Utils::Output.odeprecated "`move_children` in an install steps block", "`move_contents`"
         add_step("move_children",
                  "source" => path_spec(source, base: source_base, default_base: @default_source_base),
                  "target" => path_spec(target, base: target_base, default_base: @default_target_base))
@@ -364,9 +378,7 @@ module Homebrew
           target_base:         ::T.nilable(::T.any(::String, ::Symbol)),
           source_formula:      ::T.nilable(::String),
           target_formula:      ::T.nilable(::String),
-          # odeprecated
           force:               ::T::Boolean,
-          # odeprecated
           uninstall:           ::T::Boolean,
           overwrite:           ::T::Boolean,
           remove_on_uninstall: ::T::Boolean,
@@ -377,6 +389,11 @@ module Homebrew
       def symlink(source, target, source_base: nil, target_base: nil, source_formula: nil, target_formula: nil,
                   force: false, uninstall: false, overwrite: false, remove_on_uninstall: false,
                   source_glob: false, sudo: false)
+        ::Utils::Output.odeprecated "`force:` in `symlink`", "`overwrite:` in `symlink`" if force
+        if uninstall
+          ::Utils::Output.odeprecated "`uninstall:` in `symlink`", "`remove_on_uninstall:` in `symlink`"
+        end
+
         add_step("symlink",
                  "source"      => path_spec(source, base: source_base, formula: source_formula,
                                     default_base: @default_source_base),
@@ -388,7 +405,6 @@ module Homebrew
                  "sudo"        => sudo.is_a?(::Symbol) ? sudo.to_s : sudo)
       end
 
-      # odeprecated
       sig {
         params(
           source:         ::T.any(::String, ::Pathname),
@@ -403,10 +419,11 @@ module Homebrew
       }
       def ln_s(source, target, source_base: nil, target_base: nil, source_formula: nil, target_formula: nil,
                force: false, uninstall: false)
-        symlink(source, target, source_base:, target_base:, source_formula:, target_formula:, force:, uninstall:)
+        ::Utils::Output.odeprecated "`ln_s` in an install steps block", "`symlink`"
+        symlink(source, target, source_base:, target_base:, source_formula:, target_formula:,
+                overwrite: force, remove_on_uninstall: uninstall)
       end
 
-      # odeprecated
       sig {
         params(
           source:         ::T.any(::String, ::Pathname),
@@ -420,10 +437,11 @@ module Homebrew
       }
       def ln_sf(source, target, source_base: nil, target_base: nil, source_formula: nil, target_formula: nil,
                 uninstall: false)
-        symlink(source, target, source_base:, target_base:, source_formula:, target_formula:, force: true, uninstall:)
+        ::Utils::Output.odeprecated "`ln_sf` in an install steps block", "`symlink`"
+        symlink(source, target, source_base:, target_base:, source_formula:, target_formula:,
+                overwrite: true, remove_on_uninstall: uninstall)
       end
 
-      # odeprecated
       sig {
         params(
           source:      ::T.any(::String, ::Pathname),
@@ -433,6 +451,7 @@ module Homebrew
         ).void
       }
       def link_dir(source, target, source_base: nil, target_base: :homebrew_prefix)
+        ::Utils::Output.odeprecated "`link_dir` in an install steps block", "`symlink_tree`"
         add_step("link_dir",
                  "source" => path_spec(source, base: source_base, default_base: @default_source_base),
                  "target" => path_spec(target, base: target_base, default_base: @default_target_base))
@@ -452,7 +471,6 @@ module Homebrew
                  "target" => path_spec(target, base: target_base, default_base: @default_target_base))
       end
 
-      # odeprecated
       sig {
         params(
           source:      ::T.any(::String, ::Pathname),
@@ -464,6 +482,7 @@ module Homebrew
         ).void
       }
       def link_children(source, target = nil, source_base: nil, target_base: :homebrew_prefix, prefix: "", suffix: "")
+        ::Utils::Output.odeprecated "`link_children` in an install steps block", "`symlink_children`"
         add_step("link_children",
                  "source" => path_spec(source, base: source_base, default_base: @default_source_base),
                  "target" => path_spec(target || source, base: target_base, default_base: @default_target_base),
@@ -490,7 +509,6 @@ module Homebrew
                  "suffix" => suffix)
       end
 
-      # odeprecated
       sig {
         params(
           path:      ::T.any(::String, ::Pathname),
@@ -500,6 +518,7 @@ module Homebrew
         ).void
       }
       def write(path, content, base: nil, overwrite: false)
+        ::Utils::Output.odeprecated "`write` in an install steps block", "`write_file`"
         content = "#{content}\n" unless content.end_with?("\n")
         add_step("write",
                  "path"      => path_spec(path, base:, default_base: @default_base),
@@ -550,9 +569,9 @@ module Homebrew
         add_rebuild_action("compile_gsettings_schemas", "share/glib-2.0/schemas")
       end
 
-      # odeprecated
       sig { void }
       def gio_querymodules
+        ::Utils::Output.odeprecated "`gio_querymodules` in an install steps block", "`update_gio_modules_cache`"
         add_rebuild_action("gio_querymodules", "lib/gio/modules")
       end
 
@@ -561,9 +580,10 @@ module Homebrew
         add_rebuild_action("gio_querymodules", "lib/gio/modules")
       end
 
-      # odeprecated
       sig { void }
       def gdk_pixbuf_query_loaders
+        ::Utils::Output.odeprecated "`gdk_pixbuf_query_loaders` in an install steps block",
+                                    "`update_gdk_pixbuf_loaders_cache`"
         add_step("gdk_pixbuf_query_loaders")
       end
 
@@ -572,9 +592,9 @@ module Homebrew
         add_step("gdk_pixbuf_query_loaders")
       end
 
-      # odeprecated
       sig { void }
       def gtk_update_icon_cache
+        ::Utils::Output.odeprecated "`gtk_update_icon_cache` in an install steps block", "`update_gtk_icon_cache`"
         add_rebuild_action("gtk_update_icon_cache", "share/icons/hicolor")
       end
 
@@ -593,7 +613,6 @@ module Homebrew
         add_rebuild_action("update_desktop_database", "share/applications")
       end
 
-      # odeprecated
       sig {
         params(
           name:                 ::String,
@@ -602,6 +621,8 @@ module Homebrew
         ).void
       }
       def delete_keychain_certificate(name, matching_certificate: nil, base: nil)
+        ::Utils::Output.odeprecated "`delete_keychain_certificate` in an install steps block",
+                                    "`delete_keychain_certificates`"
         add_step("delete_keychain_certificate",
                  "name"                 => name,
                  "matching_certificate" => (path_spec(matching_certificate, base:, default_base: nil) if
@@ -1441,8 +1462,10 @@ module Homebrew
       sig { params(spec: PathSpec).returns(T::Array[Pathname]) }
       def expand_path_glob(spec)
         base = spec["base"]
-        # odeprecated
-        base = "search_path" if base == "path"
+        if base == "path"
+          odeprecated "`base: :path` in an install steps block", "`base: :search_path`"
+          base = "search_path"
+        end
         if base == "search_path"
           path = expand_template_tokens(spec.fetch("path"))
           return ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).flat_map do |directory|

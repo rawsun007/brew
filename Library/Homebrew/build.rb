@@ -91,7 +91,7 @@ class Build
 
     ENV.activate_extensions!(env: args.env)
 
-    if superenv?(args.env)
+    if Homebrew.superenv?(args.env)
       superenv = ENV
       superenv.keg_only_deps = keg_only_deps
       superenv.deps = formula_deps
@@ -203,7 +203,7 @@ class Build
               EOS
             end
 
-            interactive_shell(formula)
+            Homebrew.interactive_shell(formula)
           else
             formula.prefix.mkpath
             formula.logs.mkpath
@@ -259,7 +259,7 @@ class Build
   sig { params(formula: Formula).void }
   def fixopt(formula)
     path = if formula.linked_keg.directory? && formula.linked_keg.symlink?
-      formula.linked_keg.resolved_path
+      Utils::Path.resolved_path(formula.linked_keg)
     elsif formula.prefix.directory?
       formula.prefix
     elsif (children = formula.rack.children.presence) && children.size == 1 &&

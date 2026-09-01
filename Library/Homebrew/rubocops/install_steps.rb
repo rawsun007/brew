@@ -13,8 +13,7 @@ module RuboCop
         include InstallStepsHelper
 
         CONFLICT_MSG = "`post_install` and `post_install_steps` cannot both be used."
-        LEGACY_POST_INSTALL_MSG =
-          "Formulae in official Homebrew taps must use `post_install_steps` instead of `post_install`."
+        LEGACY_POST_INSTALL_MSG = "Formulae must use `post_install_steps` instead of `post_install`."
         REDUNDANT_SERVICE_PATH_DIRS_MSG = "`%<block>s` only creates directories created by `brew services`."
         EXPLICIT_BASE_MSG = "Formula install-step paths must specify their base explicitly."
         EXPLICIT_BASE_STEP_METHODS = [:if_path_exists, :unless_path_exists, :mkdir, :mkdir_p, :touch, :remove,
@@ -108,8 +107,6 @@ module RuboCop
 
           converted_post_install = autocorrect_post_install_method?(post_install_method, post_install_steps_block,
                                                                     body_node, formula_nodes.class_node.const_name)
-          # odeprecated: remove the official-tap scope in the next major or minor release.
-          return unless official_homebrew_tap?(processed_source.file_path)
           return if post_install_method.nil? || converted_post_install
 
           add_offense(post_install_method, message: LEGACY_POST_INSTALL_MSG)

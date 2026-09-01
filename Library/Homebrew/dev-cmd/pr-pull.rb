@@ -48,7 +48,7 @@ module Homebrew
                description: "Does not clean up the tmp directory for the bottle so it can be used later."
         flag   "--committer=",
                description: "Specify a committer name and email in `git`'s standard author format.",
-               odeprecated: true
+               odisabled:   true
         flag   "--message=",
                depends_on:  "--autosquash",
                description: "Message to include when autosquashing revision bumps, deletions and rebuilds."
@@ -79,21 +79,15 @@ module Homebrew
       sig { override.void }
       def run
         # Needed when extracting the CI artifact.
-        ensure_executable!("unzip", reason: "extracting CI artifacts")
+        Homebrew.ensure_executable!("unzip", reason: "extracting CI artifacts")
 
         workflows = args.workflows.presence || ["tests.yml"]
         artifact_pattern = args.artifact_pattern || "bottles{,_*}"
         tap = Tap.fetch(args.tap || CoreTap.instance.name)
         raise TapUnavailableError, tap.name unless tap.installed?
 
-        Utils::Git.set_name_email!(committer: args.committer.blank?)
+        Utils::Git.set_name_email!
         Utils::Git.setup_gpg!
-
-        if (committer = args.committer)
-          committer = Utils.parse_author!(committer)
-          ENV["GIT_COMMITTER_NAME"] = committer[:name]
-          ENV["GIT_COMMITTER_EMAIL"] = committer[:email]
-        end
 
         args.named.uniq.each do |arg|
           arg = "#{tap.default_remote}/pull/#{arg}" if arg.to_i.positive?
@@ -184,7 +178,7 @@ module Homebrew
               upload_args << "--warn-on-upload-failure" if args.warn_on_upload_failure?
               upload_args << "--root-url=#{args.root_url}" if args.root_url
               upload_args << "--root-url-using=#{args.root_url_using}" if args.root_url_using
-              safe_system HOMEBREW_BREW_FILE, *upload_args
+              Homebrew.safe_system_brew(*upload_args)
             end
           ensure
             if args.retain_bottle_dir? && GitHub::Actions.env_set?
@@ -241,7 +235,7 @@ module Homebrew
         if dry_run
           puts(*git_args)
         else
-          safe_system(*git_args)
+          Homebrew.safe_system(*git_args)
         end
       end
 
@@ -316,8 +310,8 @@ module Homebrew
         subject, body, trailers = separate_commit_message(msg)
 
         if subject != bump_subject && !subject.start_with?("#{package_name}:")
-          safe_system("git", "-C", git_repo.pathname, "commit", "--amend", "-q",
-                      "-m", bump_subject, "-m", subject, "-m", body, "-m", trailers)
+          Homebrew.safe_system("git", "-C", git_repo.pathname, "commit", "--amend", "-q",
+                               "-m", bump_subject, "-m", subject, "-m", body, "-m", trailers)
           ohai bump_subject
         else
           ohai subject
@@ -374,9 +368,9 @@ module Homebrew
         bump_subject = determine_bump_subject(old_package, new_package, package_file, reason:)
 
         # Commit with the new subject, body and trailers.
-        safe_system("git", "-C", git_repo.pathname, "commit", "--quiet",
-                    "-m", bump_subject, "-m", messages.join("\n"), "-m", trailers.join("\n"),
-                    "--author", original_author, "--date", original_date, "--", file)
+        Homebrew.safe_system("git", "-C", git_repo.pathname, "commit", "--quiet",
+                             "-m", bump_subject, "-m", messages.join("\n"), "-m", trailers.join("\n"),
+                             "--author", original_author, "--date", original_date, "--", file)
         ohai bump_subject
       end
 
@@ -414,7 +408,7 @@ module Homebrew
         end
 
         # Reset to state before cherry-picking.
-        safe_system "git", "-C", tap.path, "reset", "--hard", original_commit
+        Homebrew.safe_system "git", "-C", tap.path, "reset", "--hard", original_commit
 
         # Iterate over every commit in the pull request series, but if we have to squash
         # multiple commits into one, ensure that we skip over commits we've already squashed.
@@ -490,7 +484,7 @@ module Homebrew
           odie "Pull request ##{pull_request} is at #{pull_request_head_sha} but expected #{head_sha}."
         end
 
-        safe_system "git", "-C", path, "fetch", "--quiet", "--force", "origin", commits.last
+        Homebrew.safe_system "git", "-C", path, "fetch", "--quiet", "--force", "origin", commits.last
         ohai "Using #{commits.count} commit#{"s" if commits.count != 1} from ##{pull_request}"
         Utils::Git.cherry_pick!(path, "--ff", "--allow-empty", *commits, verbose: args.verbose?,
                                                                          resolve: args.resolve?)

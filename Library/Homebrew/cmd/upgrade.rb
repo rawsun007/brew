@@ -80,7 +80,7 @@ module Homebrew
                             "This is the default unless `$HOMEBREW_NO_ASK` is set.",
                env:         :ask,
                replacement: "the default behaviour",
-               odeprecated: true
+               odisabled:   true
         [
           [:switch, "--formula", "--formulae", {
             description: "Treat all named arguments as formulae. If no named arguments " \

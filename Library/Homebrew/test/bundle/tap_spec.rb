@@ -158,7 +158,7 @@ RSpec.describe Homebrew::Bundle::Tap do
       ensure
         if tap
           FileUtils.rm_rf(tap.path)
-          tap.path.parent.rmdir_if_possible
+          Utils::Path.rmdir_if_possible(tap.path.parent)
         end
       end
 

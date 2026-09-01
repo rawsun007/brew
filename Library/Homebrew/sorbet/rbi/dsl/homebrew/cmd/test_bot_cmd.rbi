@@ -102,9 +102,6 @@ class Homebrew::Cmd::TestBotCmd::Args < Homebrew::CLI::Args
   def skip_online_checks?; end
 
   sig { returns(T::Boolean) }
-  def skip_recursive_dependents?; end
-
-  sig { returns(T::Boolean) }
   def skip_relocation?; end
 
   sig { returns(T::Boolean) }

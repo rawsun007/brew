@@ -47,7 +47,7 @@ module Homebrew
         if not_installed.any?
           names = not_installed.map(&:to_s)
           is_or_are = (names.length == 1) ? "is" : "are"
-          odie "#{names.to_sentence} #{is_or_are} not installed."
+          odie "#{Homebrew.to_sentence(names)} #{is_or_are} not installed."
         end
 
         packages.each do |formula_or_cask|

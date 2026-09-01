@@ -77,7 +77,8 @@ module Homebrew
         switch "--eval-all",
                description: "Evaluate all available formulae and casks.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--repology",
                description: "Use Repology to check for outdated packages."
         flag   "--tap=",
@@ -108,11 +109,8 @@ module Homebrew
         Homebrew.install_bundler_gems!(groups: ["livecheck"])
 
         Homebrew.with_no_api_env do
-          eval_all = args.eval_all?
-          eval_all ||= args.no_named? && Homebrew::EnvConfig.tap_trust_configured?
-
           excluded_autobump = []
-          if args.no_autobump? && eval_all
+          if args.no_autobump? && args.no_named?
             excluded_autobump.concat(autobumped_formulae_or_casks(CoreTap.instance)) if args.formula?
             excluded_autobump.concat(autobumped_formulae_or_casks(CoreCaskTap.instance, casks: true)) if args.cask?
           end
@@ -153,14 +151,10 @@ module Homebrew
             formulae + casks
           elsif args.named.present?
             T.cast(args.named.to_formulae_and_casks_with_taps, T::Array[T.any(Formula, Cask::Cask)])
-          elsif eval_all
-            formulae = args.cask? ? [] : Formula.all(eval_all:)
-            casks = args.formula? ? [] : Cask::Cask.all(eval_all:)
-            formulae + casks
           else
-            raise UsageError,
-                  "`brew bump` without named arguments needs `--installed`, `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                  "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
+            formulae = args.cask? ? [] : Formula.all
+            casks = args.formula? ? [] : Cask::Cask.all
+            formulae + casks
           end
 
           if (start_with = args.start_with)

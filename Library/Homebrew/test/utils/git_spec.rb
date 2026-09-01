@@ -229,7 +229,7 @@ RSpec.describe Utils::Git do
 
     context "when git is available" do
       it "terminates options before the URL" do
-        expect(described_class).to receive(:quiet_system)
+        expect(Homebrew).to receive(:quiet_system)
           .with("git", "ls-remote", "--end-of-options", "-u:evil")
           .and_return(false)
 

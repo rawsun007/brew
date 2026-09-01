@@ -84,7 +84,7 @@ module Homebrew
                description: "Don't try to create an `all` bottle or stop a no-change upload."
         flag   "--committer=",
                description: "Specify a committer name and email in `git`'s standard author format.",
-               odeprecated: true
+               odisabled:   true
         flag   "--root-url=",
                description: "Use the specified <URL> as the root of the bottle's URL instead of Homebrew's default."
         flag   "--root-url-using=",
@@ -316,7 +316,7 @@ module Homebrew
         if args.verbose? && absolute_symlinks_start_with_string.present?
           opoo "Absolute symlink starting with #{string}:"
           absolute_symlinks_start_with_string.each do |pn|
-            puts "  #{pn} -> #{pn.resolved_path}"
+            puts "  #{pn} -> #{Utils::Path.resolved_path(pn)}"
           end
         end
 
@@ -629,9 +629,9 @@ module Homebrew
               tab_source_modified_time = [time_at_epoch, tab.source_modified_time].max
               tar_mtime = tab_source_modified_time.strftime("%Y-%m-%d %H:%M:%S")
               tar, tar_args = setup_tar_and_args!(tar_mtime, default_tar: formula.name == "gnu-tar")
-              safe_system tar, "--create", "--numeric-owner",
-                          *tar_args,
-                          "--file", tar_path, "#{formula.name}/#{formula.pkg_version}"
+              Homebrew.safe_system tar, "--create", "--numeric-owner",
+                                   *tar_args,
+                                   "--file", tar_path, "#{formula.name}/#{formula.pkg_version}"
               sudo_purge
               # Set filename as it affects the tarball checksum.
               relocatable_tar_path = "#{formula}-bottle.tar"
@@ -647,10 +647,10 @@ module Homebrew
 
             puts if !relocatable && args.verbose?
           rescue Interrupt
-            ignore_interrupts { bottle_path.unlink if bottle_path.exist? }
+            Homebrew.ignore_interrupts { bottle_path.unlink if bottle_path.exist? }
             raise
           ensure
-            ignore_interrupts do
+            Homebrew.ignore_interrupts do
               original_tab&.write
               keg.replace_placeholders_with_locations(changed_files) if changed_files
             end
@@ -928,22 +928,16 @@ module Homebrew
 
           next if args.no_commit?
 
-          Utils::Git.set_name_email!(committer: args.committer.blank?)
+          Utils::Git.set_name_email!
           Utils::Git.setup_gpg!
-
-          if (committer = args.committer)
-            committer = Utils.parse_author!(committer)
-            ENV["GIT_COMMITTER_NAME"] = committer[:name]
-            ENV["GIT_COMMITTER_EMAIL"] = committer[:email]
-          end
 
           short_name = Utils.name_from_full_name(formula_name)
           pkg_version = bottle_hash["formula"]["pkg_version"]
 
           path.parent.cd do
-            safe_system "git", "commit", "--no-edit", "--verbose",
-                        "--message=#{short_name}: #{update_or_add} #{pkg_version} bottle.",
-                        "--", path
+            Homebrew.safe_system "git", "commit", "--no-edit", "--verbose",
+                                 "--message=#{short_name}: #{update_or_add} #{pkg_version} bottle.",
+                                 "--", path
           end
         end
       end

@@ -113,15 +113,13 @@ module OS
 
       sig { void }
       def no_weak_imports
-        # This has little-to-no usage and doesn't make sense to have a special function for.
-        odeprecated "ENV.no_weak_imports"
+        odisabled "ENV.no_weak_imports", "passing `-Wl,-no_weak_imports` to the linker"
         append "LDFLAGS", "-Wl,-no_weak_imports" if no_weak_imports_support?
       end
 
       sig { void }
       def no_fixup_chains
-        # This has little-to-no usage and behaved inconsistently with the superenv equivalent.
-        odeprecated "ENV.no_fixup_chains"
+        odisabled "ENV.no_fixup_chains", "the default linker behaviour"
         append "LDFLAGS", "-Wl,-no_fixup_chains" if no_fixup_chains_support?
       end
     end

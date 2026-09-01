@@ -469,7 +469,7 @@ RSpec.describe Caveats do
         end
       end
       let(:caveats) { described_class.new(f) }
-      let(:path) { f.prefix.resolved_path }
+      let(:path) { Utils::Path.resolved_path(f.prefix) }
 
       let(:bash_completion_dir) { path/"etc/bash_completion.d" }
       let(:fish_vendor_completions) { path/"share/fish/vendor_completions.d" }

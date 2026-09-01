@@ -13,8 +13,8 @@ module Homebrew
         unless args.stable?
           # Run `brew typecheck` if this tap is typed.
           # TODO: consider in future if we want to allow unsupported taps here.
-          if tapped.official? && quiet_system(git, "-C", tapped.path.to_s, "grep", "-qE",
-                                              "^# typed: (true|strict|strong)$")
+          if tapped.official? && Homebrew.quiet_system(git, "-C", tapped.path.to_s, "grep", "-qE",
+                                                       "^# typed: (true|strict|strong)$")
             test "brew", "typecheck", tapped.name
           end
 

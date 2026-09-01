@@ -31,7 +31,7 @@ module OS
         linkage_files = []
         candidates.each do |file|
           changed = T.let(false, T::Boolean)
-          file.ensure_writable do
+          Utils::Path.ensure_writable(file.to_path) do
             changed = change_rpath!(file, old_prefix, new_prefix, with_placeholders:)
           end
           linkage_files << file.relative_path_from(path) if changed

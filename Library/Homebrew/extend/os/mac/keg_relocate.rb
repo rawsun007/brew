@@ -43,7 +43,7 @@ module OS
 
         linkage_files = []
         candidates.each do |file|
-          file.ensure_writable do
+          Utils::Path.ensure_writable(file.to_path) do
             modified = T.let(false, T::Boolean)
 
             if file.dylib? && (dylib_id = file.dylib_id) && (id = relocated_name_for(dylib_id, relocation))
@@ -79,7 +79,7 @@ module OS
       def fix_dynamic_linkage
         fixed_files = []
         mach_o_files.each do |file|
-          file.ensure_writable do
+          Utils::Path.ensure_writable(file.to_path) do
             modified = T.let(false, T::Boolean)
 
             modified = change_dylib_id(dylib_id_for(file), file, write: false) if file.dylib?

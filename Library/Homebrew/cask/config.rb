@@ -152,8 +152,8 @@ module Cask
         return
       end
 
-      @env&.assert_valid_keys(*self.class.defaults.keys)
-      @explicit.assert_valid_keys(*self.class.defaults.keys)
+      Homebrew.assert_valid_keys(@env, *self.class.defaults.keys) if @env
+      Homebrew.assert_valid_keys(@explicit, *self.class.defaults.keys)
     end
 
     # runtime recursive evaluation forces the LazyObject to be evaluated

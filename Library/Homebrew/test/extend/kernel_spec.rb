@@ -17,8 +17,15 @@ RSpec.describe Kernel do
 
       ENV["SHELL"] = shell
 
-      expect { interactive_shell }.not_to raise_error
+      expect { Homebrew.interactive_shell }.not_to raise_error
       expect(dir/"called").to exist
+    end
+
+    it "deprecates the Kernel helper" do
+      expect(Utils::Output).to receive(:odeprecated).with("Kernel#interactive_shell", "Homebrew.interactive_shell")
+      expect(Homebrew).to receive(:interactive_shell).with(nil)
+
+      interactive_shell
     end
   end
 
@@ -55,7 +62,14 @@ RSpec.describe Kernel do
     FileUtils.touch editor
     FileUtils.chmod 0755, editor
 
-    expect(which_editor).to eq("vemate -w")
+    expect(Homebrew.which_editor).to eq("vemate -w")
+  end
+
+  specify "the Kernel #which_editor helper is deprecated" do
+    expect(Utils::Output).to receive(:odeprecated).with("Kernel#which_editor", "Homebrew.which_editor")
+    expect(Homebrew).to receive(:which_editor).with(silent: false).and_return("vim")
+
+    expect(which_editor).to eq("vim")
   end
 
   describe "#with_env" do
@@ -90,6 +104,7 @@ RSpec.describe Kernel do
 
   describe "#quiet_system" do
     it "delegates to Homebrew.quiet_system" do
+      expect(Utils::Output).not_to receive(:odeprecated)
       expect(Homebrew).to receive(:quiet_system).with("true", nil).and_return(true)
       expect(quiet_system("true")).to be true
     end
@@ -97,6 +112,7 @@ RSpec.describe Kernel do
 
   describe "#safe_system" do
     it "delegates to Homebrew.safe_system" do
+      expect(Utils::Output).not_to receive(:odeprecated)
       expect(Homebrew).to receive(:safe_system).with("true", nil)
       safe_system("true")
     end

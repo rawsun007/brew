@@ -38,7 +38,7 @@ RSpec.describe LockFile do
     # Deferring the interrupt can't be observed in-process, as RSpec owns the
     # `INT` handler that `ignore_interrupts` traps.
     it "ignores interrupts while locking" do
-      expect(lock_file).to receive(:ignore_interrupts).and_call_original
+      expect(Homebrew).to receive(:ignore_interrupts).and_call_original
 
       lock_file.lock
     end

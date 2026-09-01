@@ -15,21 +15,20 @@ RSpec.describe Homebrew::Cmd::Uses do
     setup_test_formula "foo"
     setup_test_formula "bar"
 
-    expect { brew "uses", "foo", "HOMEBREW_REQUIRE_TAP_TRUST" => "1" }
+    expect { brew "uses", "foo" }
       .to output("bar\n").to_stdout
       .and not_to_output.to_stderr
       .and be_a_success
   end
 
-  it "uses tap trust configuration to evaluate all formulae" do
+  it "evaluates all trusted formulae" do
     used_formula = instance_double(Formula, full_name: "foo")
     cmd = described_class.new(["--formula", "foo"])
 
     allow(cmd.args.named).to receive(:to_formulae).and_return([used_formula])
-    expect(Formula).to receive(:all).with(eval_all: true).and_return([])
+    expect(Formula).to receive(:all).and_return([])
 
-    expect { with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") { cmd.run } }
-      .to not_to_output.to_stderr
+    expect { cmd.run }.to not_to_output.to_stderr
   end
 
   it "handles unavailable formula" do

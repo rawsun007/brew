@@ -27,7 +27,8 @@ module Homebrew
                description: "Evaluate all available formulae and casks, whether installed or not, to search their " \
                             "descriptions.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--formula", "--formulae",
                description: "Treat all named arguments as formulae."
         switch "--cask", "--casks",
@@ -49,12 +50,6 @@ module Homebrew
         end
 
         if search_type
-          if !args.eval_all? && !Homebrew::EnvConfig.tap_trust_configured? && Homebrew::EnvConfig.no_install_from_api?
-            raise UsageError,
-                  "`brew desc --search` needs `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                  "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
-          end
-
           query = args.named.join(" ")
           string_or_regex = Search.query_regexp(query)
           return Search.search_descriptions(string_or_regex, args, search_type:)

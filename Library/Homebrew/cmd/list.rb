@@ -46,7 +46,7 @@ module Homebrew
                description: "List the formulae not installed on request (i.e. installed as dependencies)."
         switch "--installed-as-dependency",
                description: "List the formulae installed as dependencies.",
-               odeprecated: true,
+               odisabled:   true,
                replacement: "--no-installed-on-request"
         switch "--poured-from-bottle",
                description: "List the formulae installed from a bottle."
@@ -99,7 +99,7 @@ module Homebrew
           raise UsageError, "`brew list --versions --json` is only supported by the fast Bash path with `jq`."
         end
 
-        installed_as_dependency = args.no_installed_on_request? || args.installed_as_dependency?
+        installed_as_dependency = args.no_installed_on_request?
 
         if args.full_name? &&
            !(args.installed_on_request? || installed_as_dependency ||
@@ -290,7 +290,7 @@ module Homebrew
         pin_path = HOMEBREW_PINNED_CASKS/token
         return if !pin_path.symlink? || !pin_path.exist?
 
-        "#{token}#{" #{pin_path.resolved_path.basename}" if args.versions?}"
+        "#{token}#{" #{Utils::Path.resolved_path(pin_path).basename}" if args.versions?}"
       end
 
       sig { void }

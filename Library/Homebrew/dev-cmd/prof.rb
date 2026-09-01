@@ -27,7 +27,7 @@ module Homebrew
       def run
         Homebrew.install_bundler_gems!(groups: ["prof"], setup_path: false) unless args.timings?
 
-        brew_rb = (HOMEBREW_LIBRARY_PATH/"brew.rb").resolved_path
+        brew_rb = Utils::Path.resolved_path(HOMEBREW_LIBRARY_PATH/"brew.rb")
         FileUtils.mkdir_p "prof"
         cmd = T.must(args.named.first)
 
@@ -45,8 +45,8 @@ module Homebrew
 
         if args.timings?
           output_filename = "prof/timings.json"
-          safe_system({ "HOMEBREW_PHASE_TIMINGS" => output_filename },
-                      *HOMEBREW_RUBY_EXEC_ARGS, brew_rb, *args.named)
+          Homebrew.safe_system({ "HOMEBREW_PHASE_TIMINGS" => output_filename },
+                               *HOMEBREW_RUBY_EXEC_ARGS, brew_rb, *args.named)
           ohai "Phase timings written to #{output_filename}"
           return
         end
@@ -58,10 +58,10 @@ module Homebrew
             system(*HOMEBREW_RUBY_EXEC_ARGS, brew_rb, *args.named)
           end
           output_filename = "prof/d3-flamegraph.html"
-          safe_system "stackprof --d3-flamegraph prof/stackprof.dump > #{output_filename}"
+          Homebrew.safe_system "stackprof --d3-flamegraph prof/stackprof.dump > #{output_filename}"
           # `brew prof` is often run from tests or scripts. Only open the HTML
           # report automatically when the user is attached to a terminal.
-          exec_browser output_filename if $stdout.tty?
+          Homebrew.exec_browser output_filename if $stdout.tty?
         elsif args.vernier?
           output_filename = "prof/vernier.json"
           Process::UID.change_privilege(Process.euid) if Process.euid != Process.uid
@@ -72,20 +72,21 @@ module Homebrew
           # `HOMEBREW_SPAWN_SYSTEM` is intentionally scoped to this profiled
           # process. It lets selected process helpers avoid manual fork paths
           # that can inherit Vernier's active native collector state.
-          safe_system({ "HOMEBREW_SPAWN_SYSTEM" => "1",
+          Homebrew.safe_system({ "HOMEBREW_SPAWN_SYSTEM" => "1",
                         "VERNIER_ALLOCATION_INTERVAL" => "500", "VERNIER_OUTPUT" => output_filename },
-                      RUBY_PATH, "-I", (Pathname(Gem::Specification.find_by_name("vernier").full_gem_path)/"lib").to_s,
-                      "-r", "vernier/autorun",
-                      "-r", (HOMEBREW_LIBRARY_PATH/"prof/vernier_fork_guard").to_s, brew_rb, *args.named)
+                               RUBY_PATH, "-I", (Pathname(Gem::Specification.find_by_name("vernier").full_gem_path)/"lib").to_s,
+                               "-r", "vernier/autorun",
+                               "-r", (HOMEBREW_LIBRARY_PATH/"prof/vernier_fork_guard").to_s, brew_rb, *args.named)
           ohai "Profiling complete!"
           puts "Upload the results from #{output_filename} to:"
           puts "  #{Formatter.url("https://vernier.prof")}"
         else
           output_filename = "prof/call_stack.html"
-          safe_system "ruby-prof", "--printer=call_stack", "--file=#{output_filename}", brew_rb, "--", *args.named
+          Homebrew.safe_system "ruby-prof", "--printer=call_stack", "--file=#{output_filename}", brew_rb, "--",
+                               *args.named
           # Match the stackprof behaviour above: generating the file is useful
           # in non-interactive runs but launching a browser is not.
-          exec_browser output_filename if $stdout.tty?
+          Homebrew.exec_browser output_filename if $stdout.tty?
         end
       rescue OptionParser::InvalidOption => e
         ofail e

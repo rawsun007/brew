@@ -566,8 +566,10 @@ module Homebrew
         opt_prefix = HOMEBREW_PREFIX/"opt/#{rack.basename}"
 
         begin
-          return Keg.new(opt_prefix.resolved_path) if opt_prefix.symlink? && opt_prefix.directory?
-          return Keg.new(linked_keg_ref.resolved_path) if linked_keg_ref.symlink? && linked_keg_ref.directory?
+          return Keg.new(Utils::Path.resolved_path(opt_prefix)) if opt_prefix.symlink? && opt_prefix.directory?
+          if linked_keg_ref.symlink? && linked_keg_ref.directory?
+            return Keg.new(Utils::Path.resolved_path(linked_keg_ref))
+          end
           return kegs.fetch(0) if kegs.length == 1
 
           f = if name.include?("/") || File.exist?(name)

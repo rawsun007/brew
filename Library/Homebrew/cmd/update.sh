@@ -515,9 +515,9 @@ homebrew-update() {
     fi
 
     case "${option}" in
+      # Keep in sync with the `Cmd::Update` parser in `cmd/update.rb`.
       --merge)
-        shift
-        HOMEBREW_MERGE=1
+        odie "Calling the \`--merge\` switch is disabled! There is no replacement."
         ;;
       --force) HOMEBREW_UPDATE_FORCE=1 ;;
       --simulate-from-current-branch)

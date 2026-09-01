@@ -99,7 +99,7 @@ module Homebrew
         disabled_by: :HOMEBREW_NO_ASK,
         default:     true,
         replacement: "the default behaviour",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_AUTO_UPDATE_QUIET:                {
         description: "If set, the auto-update run before commands like `brew install`, `brew upgrade` or " \
@@ -171,30 +171,33 @@ module Homebrew
         disabled_by: :HOMEBREW_BUNDLE_NO_DESCRIBE,
         default:     true,
         replacement: "the default behaviour",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_BUNDLE_DUMP_DESCRIBE:             {
         description: "If set, add a description comment above each line in `brew bundle dump` " \
                      "unless the dependency does not have a description. Use `$HOMEBREW_BUNDLE_DESCRIBE` instead.",
         boolean:     true,
         replacement: :HOMEBREW_BUNDLE_DESCRIBE,
-        odeprecated: true,
+        odisabled:   true,
       },
       **BUNDLE_DISABLE_ENVS.select { |env,| env > :HOMEBREW_BUNDLE_DESCRIBE },
       HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP:     {
         description: "If set, run `brew bundle cleanup --force` after `brew bundle install`.",
         boolean:     true,
+        replacement: "`brew bundle cleanup --force` after `brew bundle install`",
+        odeprecated: true,
       },
       HOMEBREW_BUNDLE_INSTALL_CLEANUP:           {
         description: "If set, run `brew bundle cleanup` after `brew bundle install`.",
         boolean:     true,
-        hidden:      true,
+        replacement: "`brew bundle cleanup` after `brew bundle install`",
+        odeprecated: true,
       },
       HOMEBREW_BUNDLE_JOBS:                      {
         description: "Ignored. `brew bundle install` batches its formula installations into a single " \
                      "`brew install`, whose download concurrency is set by `$HOMEBREW_DOWNLOAD_CONCURRENCY`.",
         default:     "auto",
-        odeprecated: true,
+        odisabled:   true,
         replacement: "$HOMEBREW_DOWNLOAD_CONCURRENCY",
       },
       HOMEBREW_BUNDLE_NO_DESCRIBE:               {
@@ -205,7 +208,7 @@ module Homebrew
       HOMEBREW_BUNDLE_NO_JOBS:                   {
         description: "Ignored. `brew bundle install` no longer runs formula installations in parallel.",
         boolean:     true,
-        odeprecated: true,
+        odisabled:   true,
         replacement: "$HOMEBREW_DOWNLOAD_CONCURRENCY",
       },
       HOMEBREW_BUNDLE_NO_SECRETS:                {
@@ -215,7 +218,7 @@ module Homebrew
         disabled_by: :HOMEBREW_BUNDLE_SECRETS,
         default:     true,
         replacement: "the default behaviour",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_BUNDLE_SECRETS:                   {
         description: "If set, do not enable the default secret scrubbing. " \
@@ -242,12 +245,12 @@ module Homebrew
         description: "Enable linking of helper executables for casks. Use " \
                      "`$HOMEBREW_CASK_OPTS` instead.",
         replacement: "HOMEBREW_CASK_OPTS",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_CASK_OPTS_REQUIRE_SHA:            {
         description: "Require all casks to have a checksum. Use `$HOMEBREW_CASK_OPTS` instead.",
         replacement: "HOMEBREW_CASK_OPTS",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_CLEANUP_MAX_AGE_DAYS:             {
         description: "Cleanup all cached files older than this many days.",
@@ -343,12 +346,11 @@ module Homebrew
         boolean:     true,
       },
       HOMEBREW_EVAL_ALL:                         {
-        description: "If set, `brew` commands evaluate all trusted formulae and casks, " \
-                     "executing their arbitrary code. Use `$HOMEBREW_REQUIRE_TAP_TRUST` or " \
-                     "`$HOMEBREW_NO_REQUIRE_TAP_TRUST` instead.",
+        description: "Previously made `brew` commands evaluate all formulae and casks. Commands now evaluate " \
+                     "formulae and casks from trusted taps by default.",
         boolean:     true,
-        replacement: "HOMEBREW_REQUIRE_TAP_TRUST or HOMEBREW_NO_REQUIRE_TAP_TRUST",
-        odeprecated: true,
+        replacement: "the default trusted-tap behaviour",
+        odisabled:   true,
       },
       HOMEBREW_FAIL_LOG_LINES:                   {
         description: "Output this many lines of output on formula `system` failures.",
@@ -561,12 +563,11 @@ module Homebrew
         boolean:     :set,
       },
       HOMEBREW_NO_EVAL_ENV_SCRUBBING:            {
-        # odeprecated: remove in a later release
         description: "If set, sensitive environment variables are available while evaluating " \
                      "formulae and casks. `$HOMEBREW_GITHUB_API_TOKEN` is still available during evaluation " \
                      "when this is unset. This setting will be removed in a later release.",
         boolean:     true,
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_NO_FORCE_BREW_WRAPPER:            {
         description: "`Deprecated:` If set, disables `$HOMEBREW_FORCE_BREW_WRAPPER` behaviour, even if set.",
@@ -618,21 +619,23 @@ module Homebrew
         boolean:     true,
       },
       HOMEBREW_NO_REQUIRE_TAP_TRUST:             {
-        # odeprecated: remove in a later release after tap trust checks are the default.
         description: "If set, do not require non-official tap formulae, casks or commands to be trusted. " \
-                     "This is not recommended and will be removed in a later release. Also enables commands " \
-                     "that evaluate all formulae and casks.",
+                     "This is not recommended and will be removed in a later release.",
         boolean:     :set,
+        replacement: "`brew trust` for each non-official tap, formula, cask or command",
+        odeprecated: true,
       },
       HOMEBREW_NO_SANDBOX_CASK:                  {
         description: "If set, disable sandboxing for cask artifacts that generate files by running " \
                      "executables.",
         boolean:     true,
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_NO_SANDBOX_LINUX:                 {
         description: "If set, disable the Linux sandbox.",
         boolean:     :set,
+        replacement: "a Landlock-enabled Linux kernel",
+        odeprecated: true,
       },
       HOMEBREW_NO_UPDATE_REPORT_NEW:             {
         description: "If set, `brew update` will not show the list of newly added formulae/casks.",
@@ -660,18 +663,18 @@ module Homebrew
       HOMEBREW_PRY:                              {
         description: "This variable no longer has any effect because Pry is largely unmaintained upstream.",
         boolean:     true,
-        odeprecated: true,
+        odisabled:   true,
         replacement: "the default IRB backend (Pry is largely unmaintained upstream)",
       },
       HOMEBREW_REQUIRE_TAP_TRUST:                {
-        # odeprecated: make tap trust checks default in a later release.
-        description: "If set, require non-official tap formulae, casks and commands to be trusted with " \
-                     "`brew trust` before Homebrew loads them. This is the default unless " \
-                     "`$HOMEBREW_NO_REQUIRE_TAP_TRUST` is set. Also enables commands that evaluate all formulae " \
-                     "and casks.",
+        description: "Previously made Homebrew require non-official tap formulae, casks and commands to be trusted " \
+                     "with `brew trust` before loading them. This is now the default unless " \
+                     "`$HOMEBREW_NO_REQUIRE_TAP_TRUST` is set.",
         boolean:     :set,
         disabled_by: :HOMEBREW_NO_REQUIRE_TAP_TRUST,
         default:     true,
+        replacement: "the default behaviour",
+        odeprecated: true,
       },
       HOMEBREW_SANDBOX_LINUX:                    {
         description: "The Landlock sandbox is the default for formula installation and testing " \
@@ -679,7 +682,7 @@ module Homebrew
         boolean:     :set,
         disabled_by: :HOMEBREW_NO_SANDBOX_LINUX,
         default:     true,
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_SBOM:                             {
         description: "Write SBOM files for source installs.",
@@ -750,7 +753,7 @@ module Homebrew
         disabled_by: :HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS,
         default:     true,
         replacement: "the default behaviour",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_UPGRADE_GREEDY:                   {
         description: "If set, pass `--greedy` to all cask upgrade commands.",
@@ -764,7 +767,7 @@ module Homebrew
         description: "If set, fetch formula and cask data from Homebrew's internal API. This is now the default.",
         boolean:     :set,
         replacement: "the default behaviour",
-        odeprecated: true,
+        odisabled:   true,
       },
       HOMEBREW_VERBOSE:                          {
         description: "If set, always assume `--verbose` when running commands.",
@@ -1040,11 +1043,6 @@ module Homebrew
       end
 
       [concurrency, 1].max
-    end
-
-    sig { returns(T::Boolean) }
-    def tap_trust_configured?
-      Homebrew::EnvConfig.require_tap_trust? || Homebrew::EnvConfig.no_require_tap_trust?
     end
   end
 end

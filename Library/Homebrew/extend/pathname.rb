@@ -7,6 +7,7 @@ require "extend/pathname/eager_initialize_extension"
 require "extend/pathname/observer_pathname_extension"
 require "extend/pathname/write_mkpath_extension"
 require "utils/output"
+require "utils/path"
 
 # Stubs needed to keep Sorbet happy.
 # rubocop:disable Style/OneClassPerFile
@@ -188,22 +189,10 @@ class Pathname
     File.basename(self, extname)
   end
 
-  # I don't trust the children.length == 0 check particularly, not to mention
-  # it is slow to enumerate the whole directory just to see if it is empty,
-  # instead rely on good ol' libc and the filesystem
   sig { returns(T::Boolean) }
   def rmdir_if_possible
-    rmdir
-    true
-  rescue Errno::ENOTEMPTY
-    if (ds_store = join(".DS_Store")).exist? && children.length == 1
-      ds_store.unlink
-      retry
-    else
-      false
-    end
-  rescue Errno::EACCES, Errno::ENOENT, Errno::EBUSY, Errno::EPERM
-    false
+    Utils::Output.odeprecated "Pathname#rmdir_if_possible", "Utils::Path.rmdir_if_possible"
+    Utils::Path.rmdir_if_possible(self)
   end
 
   sig { returns(Version) }
@@ -214,7 +203,8 @@ class Pathname
 
   sig { returns(T::Boolean) }
   def text_executable?
-    /\A#!\s*\S+/.match?(open("r") { |f| f.read(1024) })
+    Utils::Output.odeprecated "Pathname#text_executable?", "Utils::Path.text_executable?"
+    Utils::Path.text_executable?(self)
   end
 
   sig { returns(String) }
@@ -258,17 +248,14 @@ class Pathname
 
   sig { returns(Pathname) }
   def resolved_path
-    symlink? ? dirname.join(readlink) : self
+    Utils::Output.odeprecated "Pathname#resolved_path", "Utils::Path.resolved_path"
+    Utils::Path.resolved_path(self)
   end
 
   sig { returns(T::Boolean) }
   def resolved_path_exists?
-    link = readlink
-  rescue ArgumentError
-    # The link target contains NUL bytes
-    false
-  else
-    dirname.join(link).exist?
+    Utils::Output.odeprecated "Pathname#resolved_path_exists?", "Utils::Path.resolved_path_exists?"
+    Utils::Path.resolved_path_exists?(self)
   end
 
   sig { params(src: Pathname).void }
@@ -277,26 +264,20 @@ class Pathname
     File.symlink(src.relative_path_from(dirname), self)
   end
 
-  sig { params(_block: T.proc.void).void }
-  def ensure_writable(&_block)
-    saved_perms = nil
-    unless writable?
-      saved_perms = stat.mode
-      FileUtils.chmod "u+rw", to_path
-    end
-    yield
-  ensure
-    chmod saved_perms if saved_perms
+  sig { params(block: T.proc.void).void }
+  def ensure_writable(&block)
+    Utils::Output.odeprecated "Pathname#ensure_writable", "Utils::Path.ensure_writable"
+    Utils::Path.ensure_writable(self, &block)
   end
 
   sig { void }
   def install_info
-    quiet_system(which_install_info, "--quiet", to_s, "#{dirname}/dir")
+    Homebrew.quiet_system(which_install_info, "--quiet", to_s, "#{dirname}/dir")
   end
 
   sig { void }
   def uninstall_info
-    quiet_system(which_install_info, "--delete", "--quiet", to_s, "#{dirname}/dir")
+    Homebrew.quiet_system(which_install_info, "--delete", "--quiet", to_s, "#{dirname}/dir")
   end
 
   # Writes an exec script in this folder for each target pathname.
@@ -403,7 +384,7 @@ class Pathname
       next unless Metafiles.copy?(p.basename.to_s)
 
       # Some software symlinks these files (see help2man.rb)
-      filename = p.resolved_path
+      filename = Utils::Path.resolved_path(p)
       # Some software links metafiles together, so by the time we iterate to one of them
       # we may have already moved it. libxml2's COPYING and Copyright are affected by this.
       next unless filename.exist?

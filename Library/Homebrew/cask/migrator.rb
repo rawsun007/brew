@@ -3,6 +3,7 @@
 
 require "utils/inreplace"
 require "utils/output"
+require "utils/path"
 
 module Cask
   class Migrator
@@ -34,7 +35,7 @@ module Cask
         next false if old_caskroom_path.symlink? || !old_caskroom_path.directory?
 
         if Caskroom.cask_installed_caskfile(old_token).nil?
-          old_caskroom_path.rmdir_if_possible unless dry_run
+          ::Utils::Path.rmdir_if_possible(old_caskroom_path) unless dry_run
           next false
         end
 

@@ -33,4 +33,20 @@ RSpec.describe Homebrew::DevCmd::LivecheckCmd do
         .to raise_error(UsageError, /No formulae or casks to check/)
     end
   end
+
+  it "uses the watchlist before all trusted packages" do
+    allow(Homebrew).to receive(:install_bundler_gems!)
+    expect(Formula).not_to receive(:all)
+    expect(Cask::Cask).not_to receive(:all)
+
+    mktmpdir do |dir|
+      watchlist = dir/"livecheck_watchlist.txt"
+      watchlist.write("# empty\n")
+
+      with_env("HOMEBREW_LIVECHECK_WATCHLIST" => watchlist) do
+        expect { described_class.new([]).run }
+          .to raise_error(UsageError, /No formulae or casks to check/)
+      end
+    end
+  end
 end

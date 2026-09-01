@@ -67,22 +67,6 @@ RSpec.describe Homebrew::Cmd::Desc do
     end
   end
 
-  it "successfully searches with --search and HOMEBREW_NO_REQUIRE_TAP_TRUST" do
-    expect(Homebrew::Search).to receive(:search_descriptions)
-      .with("ball", anything, search_type: Descriptions::SearchField::Either)
-
-    expect { with_env(HOMEBREW_NO_REQUIRE_TAP_TRUST: "1") { described_class.new(["--search", "ball"]).run } }
-      .to not_to_output.to_stderr
-  end
-
-  it "successfully searches with --search and HOMEBREW_REQUIRE_TAP_TRUST" do
-    expect(Homebrew::Search).to receive(:search_descriptions)
-      .with("ball", anything, search_type: Descriptions::SearchField::Either)
-
-    expect { with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") { described_class.new(["--search", "ball"]).run } }
-      .to not_to_output.to_stderr
-  end
-
   it "successfully searches with API" do
     expect(Homebrew::Search).to receive(:search_descriptions)
       .with("testball", anything, search_type: Descriptions::SearchField::Either)

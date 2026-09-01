@@ -83,11 +83,10 @@ RSpec.describe Homebrew::Cmd::Info do
     expect(json["casks"]).to be_empty
   end
 
-  it "does not include eval-all casks in formula JSON" do
+  it "does not include casks in formula JSON for all packages" do
     formula = installed_info_formula
 
     allow(Formula).to receive(:all).and_return([formula])
-    allow(Homebrew::EnvConfig).to receive(:tap_trust_configured?).and_return(true)
     expect(Cask::Cask).not_to receive(:all)
 
     output = +""

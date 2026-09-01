@@ -209,7 +209,7 @@ class Caveats
   sig { returns(T.nilable(Keg)) }
   def keg
     @keg ||= T.let([formula.prefix, formula.opt_prefix, formula.linked_keg].filter_map do |d|
-      Keg.new(d.resolved_path)
+      Keg.new(Utils::Path.resolved_path(d))
     rescue
       nil
     end.first, T.nilable(Keg))
@@ -299,7 +299,8 @@ class Caveats
 
     # pbpaste is the system clipboard tool on macOS and fails with `tmux` by default
     # check if this is being run under `tmux` to avoid failing
-    if ENV.fetch("HOMEBREW_TMUX", false) && File.executable?("/usr/bin/pbpaste") && !quiet_system("/usr/bin/pbpaste")
+    if ENV.fetch("HOMEBREW_TMUX",
+                 false) && File.executable?("/usr/bin/pbpaste") && !Homebrew.quiet_system("/usr/bin/pbpaste")
       s << "" << "WARNING: brew services will fail when run under tmux."
     end
 

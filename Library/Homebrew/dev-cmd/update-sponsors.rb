@@ -46,7 +46,8 @@ module Homebrew
 
         readme = HOMEBREW_REPOSITORY/"README.md"
         content = readme.read
-        content.gsub!(/(Homebrew is generously supported by) .*\Z/m, "\\1 #{named_sponsors.to_sentence}.\n")
+        content.gsub!(/(Homebrew is generously supported by) .*\Z/m,
+                      "\\1 #{Homebrew.to_sentence(named_sponsors)}.\n")
         content << "\n#{logo_sponsors.join}\n" if logo_sponsors.presence
 
         File.write(readme, content)

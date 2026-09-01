@@ -212,9 +212,11 @@ module Homebrew
           end
           success = $CHILD_STATUS.success?
 
-          safe_system "stackprof --d3-flamegraph #{prof_input_filename} > #{prof_filename}" if args.stackprof?
+          if args.stackprof?
+            Homebrew.safe_system "stackprof --d3-flamegraph #{prof_input_filename} > #{prof_filename}"
+          end
 
-          exec_browser prof_filename if prof_filename
+          Homebrew.exec_browser prof_filename if prof_filename
 
           return if success
 

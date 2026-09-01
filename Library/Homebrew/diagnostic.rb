@@ -384,7 +384,7 @@ module Homebrew
           next unless d.directory?
 
           d.find do |path|
-            broken_symlinks << path if path.symlink? && !path.resolved_path_exists?
+            broken_symlinks << path if path.symlink? && !Utils::Path.resolved_path_exists?(path)
           end
         end
         return if broken_symlinks.empty?
@@ -868,7 +868,7 @@ module Homebrew
         else
           "Trust specific"
         end
-        generic_trust_message = "#{generic_trust_prefix} #{generic_trust_types.to_sentence} with:\n" \
+        generic_trust_message = "#{generic_trust_prefix} #{Homebrew.to_sentence(generic_trust_types)} with:\n" \
                                 "#{generic_trust_commands.join("\n")}"
         trust_messages = if installed_items_from_untrusted_taps
           ["Prefer trusting only the specific formulae, casks or commands you need."]
@@ -888,13 +888,6 @@ module Homebrew
             brew trust #{untrusted_tap_names.join(" ")}
         EOS
         trust_messages << untap_message if installed_items_from_untrusted_taps
-        unless Homebrew::EnvConfig.no_env_hints?
-          trust_messages << <<~EOS.chomp
-            To disable trust checks:
-              export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
-            This is not recommended and will be removed in a later release.
-          EOS
-        end
         trust_messages << <<~EOS.chomp
           For more information, see:
             #{Formatter.url("https://docs.brew.sh/Tap-Trust")}
@@ -919,7 +912,7 @@ module Homebrew
             next if src == prefix
 
             dst = HOMEBREW_PREFIX + src.relative_path_from(prefix)
-            return true if dst.symlink? && src == dst.resolved_path
+            return true if dst.symlink? && src == Utils::Path.resolved_path(dst)
           end
         end
 
@@ -1427,7 +1420,7 @@ module Homebrew
         taps_string = Utils.pluralize("tap", error_tap_paths.count)
         return unless error_tap_paths.present?
 
-        Finding.new("Unable to read from cask #{taps_string}: #{error_tap_paths.to_sentence}")
+        Finding.new("Unable to read from cask #{taps_string}: #{Homebrew.to_sentence(error_tap_paths)}")
       end
 
       sig { returns(T.nilable(Finding)) }

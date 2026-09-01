@@ -66,8 +66,8 @@ module Homebrew
             ohai "git commit --no-edit --verbose --message=#{message} -- #{formula.path}"
           elsif !args.write_only?
             formula.path.parent.cd do
-              safe_system "git", "commit", "--no-edit", "--verbose",
-                          "--message=#{message}", "--", formula.path
+              Homebrew.safe_system "git", "commit", "--no-edit", "--verbose",
+                                   "--message=#{message}", "--", formula.path
             end
           end
         end

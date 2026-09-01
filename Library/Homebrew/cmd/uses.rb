@@ -39,7 +39,8 @@ module Homebrew
                description: "Evaluate all available formulae and casks, whether installed or not, to show " \
                             "their dependents.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--include-implicit",
                description: "Include formulae that have <formula> as an implicit dependency for " \
                             "downloading and unpacking source files."
@@ -122,20 +123,11 @@ module Homebrew
 
           deps
         else
-          eval_all = args.eval_all?
-          eval_all ||= Homebrew::EnvConfig.tap_trust_configured?
-
-          if !args.installed? && !eval_all
-            raise UsageError,
-                  "`brew uses` needs `--installed`, `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                  "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
-          end
-
           if show_formulae_and_casks || args.formula?
-            deps += args.installed? ? Formula.installed : Formula.all(eval_all:)
+            deps.concat(args.installed? ? Formula.installed : Formula.all)
           end
           if show_formulae_and_casks || args.cask?
-            deps += args.installed? ? Cask::Caskroom.casks : Cask::Cask.all(eval_all:)
+            deps.concat(args.installed? ? Cask::Caskroom.casks : Cask::Cask.all)
           end
 
           if args.missing?

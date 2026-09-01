@@ -164,14 +164,12 @@ RSpec.describe Cask::Caskroom do
 
         setup_cask_metadata(Pathname(dir), token, tap:, version: "1.0")
 
-        with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-          casks = described_class.casks
-          expect(casks.map(&:token)).to eq([token])
+        casks = described_class.casks
+        expect(casks.map(&:token)).to eq([token])
 
-          cask = casks.first
-          expect(cask&.installed_version).to eq("1.0")
-          expect(cask&.tap).to eq(tap)
-        end
+        cask = casks.first
+        expect(cask&.installed_version).to eq("1.0")
+        expect(cask&.tap).to eq(tap)
       end
     ensure
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"
@@ -219,11 +217,9 @@ RSpec.describe Cask::Caskroom do
 
         setup_cask_metadata(Pathname(dir), token, version: "1.0")
 
-        with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-          casks = described_class.casks
-          expect(casks.map(&:token)).to eq([token])
-          expect(casks.first&.installed_version).to eq("1.0")
-        end
+        casks = described_class.casks
+        expect(casks.map(&:token)).to eq([token])
+        expect(casks.first&.installed_version).to eq("1.0")
       end
     ensure
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"

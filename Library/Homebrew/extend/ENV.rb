@@ -23,7 +23,7 @@ module EnvActivation
 
   sig { params(env: T.nilable(String)).void }
   def activate_extensions!(env: nil)
-    if superenv?(env)
+    if Homebrew.superenv?(env)
       extend(Superenv)
     else
       extend(Stdenv)

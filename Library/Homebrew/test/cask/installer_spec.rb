@@ -68,6 +68,8 @@ RSpec.describe Cask::Installer, :cask do
     end
 
     it "strips legacy install flight blocks and records empty artifacts in JSON metadata" do
+      ENV["HOMEBREW_DEVELOPER"] = nil
+      Homebrew.raise_deprecation_exceptions = false
       cask = Cask::CaskLoader.load(cask_path("with-preflight"))
 
       described_class.new(cask).save_caskfile
@@ -84,6 +86,8 @@ RSpec.describe Cask::Installer, :cask do
     end
 
     it "stores legacy uninstall flight block casks as Ruby metadata" do
+      ENV["HOMEBREW_DEVELOPER"] = nil
+      Homebrew.raise_deprecation_exceptions = false
       expect(%w[with-uninstall-preflight with-uninstall-postflight].map do |token|
         cask = Cask::CaskLoader.load(cask_path(token))
 
@@ -473,7 +477,7 @@ RSpec.describe Cask::Installer, :cask do
     end
 
     context "when loaded from the api with unsupported requirements" do
-      let(:cask) { Cask::CaskLoader.load(cask_path("with-preflight")) }
+      let(:cask) { Cask::CaskLoader.load(cask_path("with-depends-on-macos-symbol")) }
       let(:download_queue) { instance_double(Homebrew::DownloadQueue, enqueue: nil) }
       let(:macos_requirement) { cask.depends_on.macos }
 
@@ -486,13 +490,13 @@ RSpec.describe Cask::Installer, :cask do
       it "checks requirements before enqueueing downloads" do
         expect do
           described_class.new(cask, download_queue:).enqueue_downloads
-        end.to raise_error(Cask::CaskError, "with-preflight: macOS is required")
+        end.to raise_error(Cask::CaskError, "with-depends-on-macos-symbol: macOS is required")
       end
 
       it "checks requirements before downloading during fetch" do
         expect do
           described_class.new(cask).fetch
-        end.to raise_error(Cask::CaskError, "with-preflight: macOS is required")
+        end.to raise_error(Cask::CaskError, "with-depends-on-macos-symbol: macOS is required")
       end
     end
 

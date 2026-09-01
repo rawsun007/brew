@@ -78,7 +78,7 @@ module Homebrew
           create_formula
         end
 
-        exec_editor path
+        Homebrew.exec_editor path
       end
 
       private

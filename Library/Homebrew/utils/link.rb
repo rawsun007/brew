@@ -19,7 +19,7 @@ module Utils
 
         dst = dst_dir/src.relative_path_from(src_dir)
         if dst.symlink?
-          next if src == dst.resolved_path
+          next if src == Utils::Path.resolved_path(dst)
 
           dst.unlink
         end
@@ -52,8 +52,8 @@ module Utils
         next if src.directory? && !unlink_dir
 
         dst = dst_dir/src.relative_path_from(src_dir)
-        dst.delete if dst.symlink? && src == dst.resolved_path
-        dst.parent.rmdir_if_possible
+        dst.delete if dst.symlink? && src == Utils::Path.resolved_path(dst)
+        Utils::Path.rmdir_if_possible(dst.parent)
       end
     end
     private_class_method :unlink_src_dst_dirs

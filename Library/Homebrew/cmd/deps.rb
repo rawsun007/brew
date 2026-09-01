@@ -80,7 +80,8 @@ module Homebrew
                description: "Evaluate all available formulae and casks, whether installed or not, to list " \
                             "their dependencies.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--for-each",
                description: "Switch into the mode used when evaluating all formulae and casks, but only list " \
                             "dependencies for each provided <formula>, one formula per line."
@@ -117,10 +118,6 @@ module Homebrew
         raise UsageError, "`brew deps --arch=all` is not supported." if args.arch == "all"
 
         os, arch = args.os_arch_combinations.fetch(0)
-        eval_all = args.eval_all?
-        eval_all ||= args.no_named? && !args.installed? && !args.brewfile &&
-                     Homebrew::EnvConfig.tap_trust_configured?
-
         Formulary.enable_factory_cache!
 
         SimulateSystem.with(os:, arch:) do
@@ -184,17 +181,15 @@ module Homebrew
               if args.dot?
                 puts dot_code
               else
-                exec_browser "https://dreampuf.github.io/GraphvizOnline/##{ERB::Util.url_encode(dot_code)}"
+                Homebrew.exec_browser "https://dreampuf.github.io/GraphvizOnline/##{ERB::Util.url_encode(dot_code)}"
               end
               return
             end
 
             puts_deps_tree(dependents, recursive:)
             return
-          elsif eval_all
-            puts_deps(sorted_dependents(
-                        Formula.all(eval_all:) + Cask::Cask.all(eval_all:),
-                      ), recursive:)
+          elsif args.no_named? && !args.installed? && !args.brewfile
+            puts_deps(sorted_dependents(Formula.all + Cask::Cask.all), recursive:)
             return
           elsif inputs.any? && args.for_each?
             puts_deps(sorted_dependents(inputs), recursive:)
@@ -332,8 +327,11 @@ module Homebrew
 
       sig { params(dependents: T::Array[T.any(Formula, CaskDependent)]).void }
       def check_head_spec(dependents)
-        headless = dependents.select { it.is_a?(Formula) && it.active_spec_sym != :head }
-                             .to_sentence two_words_connector: " or ", last_word_connector: " or "
+        headless = Homebrew.to_sentence(
+          dependents.select { it.is_a?(Formula) && it.active_spec_sym != :head },
+          two_words_connector: " or ",
+          last_word_connector: " or ",
+        )
         opoo "No head spec for #{headless}, using stable spec instead" unless headless.empty?
       end
 

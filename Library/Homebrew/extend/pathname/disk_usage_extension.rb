@@ -45,7 +45,7 @@ module DiskUsageExtension
     end
 
     path = if symlink?
-      resolved_path
+      Utils::Path.resolved_path(Pathname(to_path))
     else
       self
     end

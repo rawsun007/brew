@@ -67,7 +67,7 @@ module Homebrew
 
         if args.formulae_dependents_shard.present?
           dependent_pairs = @dependent_testing_formulae.flat_map do |formula_name|
-            dependent_pairs_for_formula(Formulary.factory(formula_name), formula_name, args:)
+            dependent_pairs_for_formula(formula_name, args:)
           end
           dependent_pairs.uniq! { |dependent, _| dependent.full_name }
 
@@ -240,7 +240,7 @@ module Homebrew
       def dependents_for_formula(formula, formula_name, args:)
         info_header "Determining dependents..."
 
-        dependents = dependent_pairs_for_formula(formula, formula_name, args:)
+        dependents = dependent_pairs_for_formula(formula_name, args:)
         if (filter = @formulae_dependents_filter)
           dependents = dependents.select do |dependent, _|
             filter.include?(dependent.name) || filter.include?(dependent.full_name)
@@ -288,20 +288,14 @@ module Homebrew
       end
 
       sig {
-        params(formula: Formula, formula_name: String, args: Homebrew::Cmd::TestBotCmd::Args)
+        params(formula_name: String, args: Homebrew::Cmd::TestBotCmd::Args)
           .returns(T::Array[DependentWithDependencies])
       }
-      def dependent_pairs_for_formula(formula, formula_name, args:)
+      def dependent_pairs_for_formula(formula_name, args:)
         @dependent_pairs_by_formula[formula_name] ||= begin
-          # Always skip recursive dependents on Intel. It's really slow.
-          # Also skip recursive dependents on Linux unless it's a Linux-only formula.
-          #
-          skip_recursive_dependents = skip_recursive_dependents?(formula, args:)
-
           uses_args = %w[--formula]
           uses_include_test_args = [*uses_args, "--include-test"]
-          uses_include_test_args << "--recursive" unless skip_recursive_dependents
-          uses_env = require_current_tap_trust_env.merge("HOMEBREW_STDERR" => "1")
+          uses_env = { "HOMEBREW_STDERR" => "1" }
           dependents = with_env(uses_env) do
             Utils.safe_popen_read("brew", "uses", *uses_include_test_args, formula_name)
                  .split("\n")
@@ -322,14 +316,7 @@ module Homebrew
           dependents = dependents.map { |d| Formulary.factory(d) }
 
           dependents = dependents.zip(dependents.map do |f|
-            if skip_recursive_dependents
-              f.deps.reject(&:implicit?)
-            else
-              Dependency.expand(f, cache_key: "test-bot-dependents") do |_, dependency|
-                next Dependable::SKIP if dependency.implicit?
-                next Dependable::KEEP_BUT_PRUNE_RECURSIVE_DEPS if dependency.build? || dependency.test?
-              end
-            end.reject(&:optional?)
+            f.deps.reject { |dependency| dependency.implicit? || dependency.optional? }
           end)
 
           # Defer formulae which could be tested later
@@ -503,11 +490,6 @@ module Homebrew
             title: "#{dependent} should be bottled for #{Homebrew::TestBot.runner_os_title}!",
           )
         end
-      end
-
-      sig { params(_formula: Formula, args: Homebrew::Cmd::TestBotCmd::Args).returns(T::Boolean) }
-      def skip_recursive_dependents?(_formula, args:)
-        args.skip_recursive_dependents? != false
       end
 
       sig { params(_dependent: Formula).returns(T::Boolean) }

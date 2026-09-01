@@ -196,7 +196,7 @@ RSpec.describe Keg do
       (keg/"lib"/"pkgconfig").make_symlink "example"
       keg.link
 
-      expect(link.resolved_path).to be_a_symlink
+      expect(Utils::Path.resolved_path(link)).to be_a_symlink
       expect(link.lstat).to be_a_symlink
     end
 
@@ -214,14 +214,14 @@ RSpec.describe Keg do
       it "ignores symlinks that have same relative path" do
         (keg/"lib"/filename).make_relative_symlink other_keg.opt_record/"lib"/filename
         keg.link
-        expect((HOMEBREW_PREFIX/"lib"/filename).resolved_path).to eq file
+        expect(Utils::Path.resolved_path(HOMEBREW_PREFIX/"lib"/filename)).to eq file
       end
 
       it "links symlinks that have different relative path" do
         filename2 = "libtest2.dylib"
         (keg/"lib"/filename2).make_relative_symlink other_keg.opt_record/"lib"/filename
         keg.link
-        expect((HOMEBREW_PREFIX/"lib"/filename2).resolved_path).to eq keg/"lib"/filename2
+        expect(Utils::Path.resolved_path(HOMEBREW_PREFIX/"lib"/filename2)).to eq keg/"lib"/filename2
       end
 
       it "fails linking symlinks that use Cellar path" do
@@ -277,7 +277,7 @@ RSpec.describe Keg do
 
     it "preverves broken symlinks pointing into the Keg" do
       keg.link
-      dst.resolved_path.delete
+      Utils::Path.resolved_path(dst).delete
       keg.unlink
       expect(dst).to be_a_symlink
     end
@@ -365,7 +365,7 @@ RSpec.describe Keg do
       (keg_record/"bin").mkpath
       keg = described_class.new(keg_record)
       keg.optlink
-      expect(keg_record).to eq(oldname_opt_record.resolved_path)
+      expect(keg_record).to eq(Utils::Path.resolved_path(oldname_opt_record))
       keg.uninstall
       expect(oldname_opt_record).not_to be_a_symlink
     end
@@ -451,7 +451,7 @@ RSpec.describe Keg do
     end
 
     it "replaces addons under node_modules when strip succeeds" do
-      allow(keg).to receive(:quiet_system) do |*command|
+      allow(Homebrew).to receive(:quiet_system) do |*command|
         File.write(command.fetch(3), "stripped")
         true
       end
@@ -462,7 +462,7 @@ RSpec.describe Keg do
     end
 
     it "leaves addons untouched when strip fails" do
-      allow(keg).to receive(:quiet_system).and_return(false)
+      allow(Homebrew).to receive(:quiet_system).and_return(false)
 
       keg.strip_node_gyp_addons!
 

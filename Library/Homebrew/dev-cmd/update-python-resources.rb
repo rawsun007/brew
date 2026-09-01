@@ -14,7 +14,7 @@ module Homebrew
                description: "Print the updated resource blocks instead of changing <formula>."
         switch "-s", "--silent",
                description: "Suppress any output.",
-               odeprecated: true
+               odisabled:   true
         switch "--ignore-errors",
                description: "Record all discovered resources, even those that can't be resolved successfully. " \
                             "This option is ignored for homebrew/core formulae."
@@ -61,7 +61,7 @@ module Homebrew
                                         exclude_packages:             args.exclude_packages,
                                         install_dependencies:         args.install_dependencies?,
                                         print_only:                   args.print_only?,
-                                        quiet:                        args.quiet? || args.silent?,
+                                        quiet:                        args.quiet?,
                                         verbose:                      args.verbose?,
                                         ignore_errors:                ignore_errors,
                                         ignore_non_pypi_packages:     args.ignore_non_pypi_packages?,

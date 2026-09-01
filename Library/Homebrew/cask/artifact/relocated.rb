@@ -19,7 +19,7 @@ module Cask
         if target_hash
           raise CaskInvalidError, cask unless target_hash.respond_to?(:keys)
 
-          target_hash.assert_valid_keys(:target)
+          Homebrew.assert_valid_keys(target_hash, :target)
         end
 
         target_hash ||= {}

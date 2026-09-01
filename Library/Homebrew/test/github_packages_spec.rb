@@ -20,7 +20,7 @@ RSpec.describe GitHubPackages do
       )
       allow(github_packages).to receive(:load_schemas!)
       allow(github_packages).to receive(:preupload_check)
-      allow(github_packages).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
+      allow(Homebrew).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
       allow(github_packages).to receive(:upload_bottle) do |_, _, _, formula_full_name, *_args, **_options|
         events << "Uploaded #{formula_full_name}"
       end
@@ -52,7 +52,7 @@ RSpec.describe GitHubPackages do
       )
       allow(github_packages).to receive(:load_schemas!)
       allow(github_packages).to receive(:preupload_check)
-      allow(github_packages).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
+      allow(Homebrew).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
       allow(github_packages).to receive(:upload_bottle) do |_, _, _, formula_full_name, *_args, **_options|
         events << "Uploaded #{formula_full_name}"
       end
@@ -78,7 +78,7 @@ RSpec.describe GitHubPackages do
         github_packages_user:  "brewtest",
         github_packages_token: "ghp_test",
       )
-      allow(github_packages).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
+      allow(Homebrew).to receive(:ensure_executable!).and_return(Pathname("skopeo"))
       allow(github_packages).to receive(:load_schemas!)
       allow(github_packages).to receive(:preupload_check)
 

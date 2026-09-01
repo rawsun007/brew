@@ -123,7 +123,7 @@ module Test
           end
           ruby_args << "-r#{HOMEBREW_LIBRARY_PATH}/test/support/helper/integration_mocks"
           ruby_args << "-e" << "$0 = ARGV.shift; load($0)"
-          ruby_args << (HOMEBREW_LIBRARY_PATH/"brew.rb").resolved_path.to_s
+          ruby_args << Utils::Path.resolved_path(HOMEBREW_LIBRARY_PATH/"brew.rb").to_s
         end
 
         Bundler.with_unbundled_env do

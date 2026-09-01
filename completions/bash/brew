@@ -383,7 +383,6 @@ _brew_analytics() {
   do
     case "${COMP_WORDS[i]}" in
       state) subcommand="state"; break ;;
-      regenerate-uuid) subcommand="regenerate-uuid"; break ;;
       on) subcommand="on"; break ;;
       off) subcommand="off"; break ;;
       *) ;;
@@ -402,15 +401,6 @@ _brew_analytics() {
           return
           ;;
 state)
-        __brewcomp "
-        --debug
-        --help
-        --quiet
-        --verbose
-        "
-        return
-        ;;
-regenerate-uuid)
         __brewcomp "
         --debug
         --help
@@ -444,7 +434,7 @@ off)
   esac
   case "${subcommand}" in
     "")
-      __brewcomp "state regenerate-uuid on off"
+      __brewcomp "state on off"
       ;;
 
     *) ;;

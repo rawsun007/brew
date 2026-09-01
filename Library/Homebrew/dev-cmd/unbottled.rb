@@ -33,7 +33,8 @@ module Homebrew
         switch "--eval-all",
                description: "Evaluate all available formulae and casks, whether installed or not, to check them.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
 
         conflicts "--dependents", "--total", "--lost"
 
@@ -75,23 +76,13 @@ module Homebrew
         end
 
         Homebrew::SimulateSystem.with(os:, arch:) do
-          eval_all = args.eval_all?
-          eval_all ||= args.named.blank? && (args.total? || args.dependents?) &&
-                       Homebrew::EnvConfig.tap_trust_configured?
-
-          if args.total? && !eval_all
-            raise UsageError,
-                  "`brew unbottled --total` needs `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                  "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
-          end
+          use_all_formulae = args.named.blank? && (args.total? || args.dependents?)
 
           if args.named.blank?
             ohai "Getting formulae..."
-          elsif eval_all
-            raise UsageError, "Cannot specify formulae when evaluating all formulae or using `--total`."
           end
 
-          formulae, all_formulae, formula_installs = formulae_all_installs_from_args(eval_all)
+          formulae, all_formulae, formula_installs = formulae_all_installs_from_args(use_all_formulae)
           deps_hash, uses_hash = deps_uses_from_formulae(all_formulae)
 
           if args.dependents?
@@ -100,7 +91,7 @@ module Homebrew
               dependents = uses_hash[f.name]&.length || 0
               formula_dependents[f.name] ||= dependents
             end.reverse
-          elsif eval_all
+          elsif use_all_formulae
             output_total(formulae)
             return
           end
@@ -122,24 +113,18 @@ module Homebrew
       private
 
       sig {
-        params(eval_all: T::Boolean).returns([T::Array[Formula], T::Array[Formula],
-                                              T.nilable(T::Hash[Symbol, Integer])])
+        params(use_all_formulae: T::Boolean).returns([T::Array[Formula], T::Array[Formula],
+                                                      T.nilable(T::Hash[Symbol, Integer])])
       }
-      def formulae_all_installs_from_args(eval_all)
+      def formulae_all_installs_from_args(use_all_formulae)
         if args.named.present?
           formulae = all_formulae = args.named.to_formulae
         elsif args.dependents?
-          unless eval_all
-            raise UsageError,
-                  "`brew unbottled --dependents` needs `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                  "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
-          end
-
-          formulae = all_formulae = Formula.all(eval_all:)
+          formulae = all_formulae = Formula.all
 
           @sort = T.let(" (sorted by number of dependents)", T.nilable(String))
-        elsif eval_all
-          formulae = all_formulae = Formula.all(eval_all:)
+        elsif use_all_formulae
+          formulae = all_formulae = Formula.all
         else
           formula_installs = {}
 
@@ -166,7 +151,7 @@ module Homebrew
           end
           @sort = T.let(" (sorted by installs in the last 90 days; top 10,000 only)", T.nilable(String))
 
-          all_formulae = Formula.all(eval_all:)
+          all_formulae = Formula.all
         end
 
         # Remove deprecated and disabled formulae as we do not care if they are unbottled

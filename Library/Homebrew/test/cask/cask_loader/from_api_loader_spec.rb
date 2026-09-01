@@ -364,18 +364,38 @@ RSpec.describe Cask::CaskLoader::FromAPILoader, :cask do
     end
 
     context "with a preflight stanza" do
+      before do
+        ENV["HOMEBREW_DEVELOPER"] = nil
+        Homebrew.raise_deprecation_exceptions = false
+      end
+
       include_examples "loads from API", "with-preflight"
     end
 
     context "with an uninstall-preflight stanza" do
+      before do
+        ENV["HOMEBREW_DEVELOPER"] = nil
+        Homebrew.raise_deprecation_exceptions = false
+      end
+
       include_examples "loads from API", "with-uninstall-preflight"
     end
 
     context "with a postflight stanza" do
+      before do
+        ENV["HOMEBREW_DEVELOPER"] = nil
+        Homebrew.raise_deprecation_exceptions = false
+      end
+
       include_examples "loads from API", "with-postflight"
     end
 
     context "with an uninstall-postflight stanza" do
+      before do
+        ENV["HOMEBREW_DEVELOPER"] = nil
+        Homebrew.raise_deprecation_exceptions = false
+      end
+
       include_examples "loads from API", "with-uninstall-postflight"
     end
 

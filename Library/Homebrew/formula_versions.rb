@@ -95,7 +95,7 @@ class FormulaVersions
     if verbose?
       yield
     else
-      redirect_stdout(File::NULL, &block)
+      Homebrew.redirect_stdout(File::NULL, &block)
     end
   end
 end

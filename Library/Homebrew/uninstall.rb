@@ -61,7 +61,7 @@ module Homebrew
               if rack.directory?
                 versions = rack.subdirs.map(&:basename)
                 puts <<~EOS
-                  #{keg.name} #{versions.to_sentence} #{versions.one? ? "is" : "are"} still installed.
+                  #{keg.name} #{Homebrew.to_sentence(versions)} #{versions.one? ? "is" : "are"} still installed.
                   To remove all versions, run:
                     brew uninstall --force #{keg.name}
                 EOS
@@ -116,7 +116,7 @@ module Homebrew
       # can become broken and we have to remove it.
       if HOMEBREW_CELLAR.directory?
         HOMEBREW_CELLAR.children.each do |rack|
-          rack.unlink if rack.symlink? && !rack.resolved_path_exists?
+          rack.unlink if rack.symlink? && !Utils::Path.resolved_path_exists?(rack)
         end
       end
     end

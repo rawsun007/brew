@@ -53,7 +53,7 @@ module Utils
     def self.remote_exists?(url)
       return true unless available?
 
-      quiet_system "git", "ls-remote", "--end-of-options", url
+      Homebrew.quiet_system "git", "ls-remote", "--end-of-options", url
     end
 
     sig { void }

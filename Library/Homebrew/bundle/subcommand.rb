@@ -32,13 +32,13 @@ module Homebrew
           ENV["HOMEBREW_ASK"] = nil
           ENV["HOMEBREW_NO_ASK"] = "1"
 
-          Homebrew::EnvConfig.bundle_dump_describe? if !args.describe? && !args.no_describe?
+          Homebrew::EnvConfig.bundle_dump_describe?
 
           context = context(args, extensions:, ask:)
           Homebrew::Bundle.upgrade_formulae = args.upgrade_formulae
 
           if args.install?
-            redirect_stdout($stderr) do
+            Homebrew.redirect_stdout($stderr) do
               InstallSubcommand.new(args, context:, quiet: true, cleanup: false).run
             end
           end

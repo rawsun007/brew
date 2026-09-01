@@ -80,7 +80,7 @@ module Homebrew
       sig { params(entry: { path: Pathname, type: T.nilable(Symbol) }, scrub: T::Boolean).returns(T::Boolean) }
       def stale?(entry, scrub: false)
         pathname = entry[:path]
-        return false unless pathname.resolved_path.file?
+        return false unless Utils::Path.resolved_path(pathname).file?
 
         case entry[:type]
         when :api_package
@@ -709,7 +709,8 @@ module Homebrew
 
       downloads = (cache/"downloads").children
 
-      referenced_downloads = cache_files.map { |file| file[:path] }.select(&:symlink?).map(&:resolved_path)
+      referenced_downloads = cache_files.map { |file| file[:path] }.select(&:symlink?)
+                                        .map { |path| Utils::Path.resolved_path(path) }
 
       (downloads - referenced_downloads).each do |download|
         if self.class.incomplete?(download)
@@ -982,7 +983,7 @@ module Homebrew
         dir.find do |path|
           path.extend(ObserverPathnameExtension)
           if path.symlink?
-            unless path.resolved_path_exists?
+            unless Utils::Path.resolved_path_exists?(path)
               path.uninstall_info if path.to_s.match?(Keg::INFOFILE_RX) && !dry_run?
 
               if dry_run?
@@ -1001,7 +1002,7 @@ module Homebrew
 
       dirs.reverse_each do |d|
         if !dry_run?
-          d.rmdir_if_possible
+          Utils::Path.rmdir_if_possible(d)
         elsif children_count[d].zero?
           puts "Would remove (empty directory): #{d}"
           children_count[d.dirname] -= 1 if children_count.key?(d.dirname)
@@ -1012,7 +1013,7 @@ module Homebrew
       if Cask::Caskroom.path.directory?
         Cask::Caskroom.path.each_child do |path|
           path.extend(ObserverPathnameExtension)
-          next if !path.symlink? || path.resolved_path_exists?
+          next if !path.symlink? || Utils::Path.resolved_path_exists?(path)
 
           if dry_run?
             puts "Would remove (broken link): #{path}"

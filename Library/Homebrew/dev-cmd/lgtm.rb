@@ -27,11 +27,11 @@ module Homebrew
 
         typecheck_args = ["typecheck", tap&.name].compact
         ohai "brew #{typecheck_args.join(" ")}"
-        safe_system HOMEBREW_BREW_FILE, *typecheck_args
+        Homebrew.safe_system_brew(*typecheck_args)
         puts
 
         ohai "brew style --changed --fix"
-        safe_system HOMEBREW_BREW_FILE, "style", "--changed", "--fix"
+        Homebrew.safe_system_brew "style", "--changed", "--fix"
         puts
 
         if tap
@@ -70,26 +70,28 @@ module Homebrew
 
           unless changed_formulae.empty?
             ohai "brew audit #{changed_audit_args.join(" ")} --skip-style --formula #{changed_formulae.join(" ")}"
-            safe_system HOMEBREW_BREW_FILE, "audit", *changed_audit_args, "--skip-style", "--formula",
-                        *changed_formulae
+            Homebrew.safe_system_brew "audit", *changed_audit_args, "--skip-style", "--formula",
+                                      *changed_formulae
             puts
           end
 
           unless new_formulae.empty?
             ohai "brew audit #{new_audit_args.join(" ")} --skip-style --formula #{new_formulae.join(" ")}"
-            safe_system HOMEBREW_BREW_FILE, "audit", *new_audit_args, "--skip-style", "--formula", *new_formulae
+            Homebrew.safe_system_brew "audit", *new_audit_args, "--skip-style", "--formula",
+                                      *new_formulae
             puts
           end
 
           unless changed_casks.empty?
             ohai "brew audit #{changed_audit_args.join(" ")} --skip-style --cask #{changed_casks.join(" ")}"
-            safe_system HOMEBREW_BREW_FILE, "audit", *changed_audit_args, "--skip-style", "--cask", *changed_casks
+            Homebrew.safe_system_brew "audit", *changed_audit_args, "--skip-style", "--cask",
+                                      *changed_casks
             puts
           end
 
           unless new_casks.empty?
             ohai "brew audit #{new_audit_args.join(" ")} --skip-style --cask #{new_casks.join(" ")}"
-            safe_system HOMEBREW_BREW_FILE, "audit", *new_audit_args, "--skip-style", "--cask", *new_casks
+            Homebrew.safe_system_brew "audit", *new_audit_args, "--skip-style", "--cask", *new_casks
             puts
           end
 
@@ -102,12 +104,12 @@ module Homebrew
           return if formulae_to_test.empty?
 
           ohai "brew test #{formulae_to_test.join(" ")}"
-          safe_system HOMEBREW_BREW_FILE, "test", *formulae_to_test
+          Homebrew.safe_system_brew "test", *formulae_to_test
         else
           audit_or_tests_args = ["--changed"]
           audit_or_tests_args << "--online" if args.online?
           ohai "brew tests #{audit_or_tests_args.join(" ")}"
-          safe_system HOMEBREW_BREW_FILE, "tests", *audit_or_tests_args
+          Homebrew.safe_system_brew "tests", *audit_or_tests_args
         end
       end
     end

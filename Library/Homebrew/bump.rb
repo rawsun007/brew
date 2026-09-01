@@ -82,8 +82,8 @@ module Homebrew
 
         git_dir = Utils.popen_read("git", "rev-parse", "--git-dir").chomp
         shallow = !git_dir.empty? && File.exist?("#{git_dir}/shallow")
-        safe_system "git", "fetch", "--unshallow", "origin" if !commit && shallow
-        safe_system "git", "checkout", "--no-track", "-b", branch, "origin/#{remote_branch}" unless commit
+        Homebrew.safe_system "git", "fetch", "--unshallow", "origin" if !commit && shallow
+        Homebrew.safe_system "git", "checkout", "--no-track", "-b", branch, "origin/#{remote_branch}" unless commit
         Utils::Git.set_name_email!
       end
 
@@ -108,11 +108,11 @@ module Homebrew
             ohai "git checkout --quiet -"
             ohai "create pull request with GitHub API (base branch: #{remote_branch})"
           else
-            safe_system "git", "add", *changed_files
+            Homebrew.safe_system "git", "add", *changed_files
             Utils::Git.set_name_email!
-            safe_system "git", "commit", "--no-edit", "--verbose",
-                        "--message=#{commit_message}",
-                        "--", *changed_files
+            Homebrew.safe_system "git", "commit", "--no-edit", "--verbose",
+                                 "--message=#{commit_message}",
+                                 "--", *changed_files
           end
         end
       end
@@ -123,7 +123,7 @@ module Homebrew
       tap.path.cd do
         system_command!("git", args:         ["push", "--set-upstream", remote_url, "#{branch}:#{branch}"],
                                print_stdout: true)
-        safe_system "git", "checkout", "--quiet", "-"
+        Homebrew.safe_system "git", "checkout", "--quiet", "-"
 
         begin
           return GitHub.create_pull_request(tap_remote_repo, pr_title,

@@ -26,9 +26,6 @@ class Homebrew::DevCmd::PrPull::Args < Homebrew::CLI::Args
   sig { returns(T::Boolean) }
   def clean?; end
 
-  sig { returns(T.nilable(String)) }
-  def committer; end
-
   sig { returns(T::Boolean) }
   def dry_run?; end
 

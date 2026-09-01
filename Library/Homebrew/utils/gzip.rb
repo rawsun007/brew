@@ -75,7 +75,7 @@ module Utils
         end
       else
         paths.map do |path|
-          safe_system "gzip", path
+          Homebrew.safe_system "gzip", path
           Pathname.new("#{path}.gz")
         end
       end

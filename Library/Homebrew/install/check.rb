@@ -189,7 +189,7 @@ module Homebrew
         # installed as a dependency.
         return false unless formula.opt_prefix.directory?
 
-        keg = Keg.new(formula.opt_prefix.resolved_path)
+        keg = Keg.new(Utils::Path.resolved_path(formula.opt_prefix))
         tab = keg.tab
         unless tab.installed_on_request
           tab.installed_on_request = true

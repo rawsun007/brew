@@ -22,7 +22,4 @@ class Homebrew::Cmd::GistLogs::Args < Homebrew::CLI::Args
 
   sig { returns(T::Boolean) }
   def private?; end
-
-  sig { returns(T::Boolean) }
-  def with_hostname?; end
 end

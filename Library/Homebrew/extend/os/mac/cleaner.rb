@@ -8,7 +8,7 @@ module OS
 
       sig { params(path: ::Pathname).returns(T::Boolean) }
       def executable_path?(path)
-        return true if path.text_executable?
+        return true if Utils::Path.text_executable?(path)
 
         path = MachOPathname.wrap(path)
         path.mach_o_executable?

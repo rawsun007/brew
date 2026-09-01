@@ -359,9 +359,9 @@ class Bottle
       FileUtils.ln_s(bottle_tmp_keg, bottle_poured_file)
     # Catch any exception type here to clean up partial queued extractions.
     rescue Exception # rubocop:disable Lint/RescueException
-      ignore_interrupts do
+      Homebrew.ignore_interrupts do
         FileUtils.rm_r(bottle_tmp_keg) if bottle_tmp_keg.directory?
-        bottle_tmp_keg.parent.rmdir_if_possible
+        Utils::Path.rmdir_if_possible(bottle_tmp_keg.parent)
       end
       raise
     end

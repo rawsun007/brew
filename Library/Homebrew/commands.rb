@@ -145,7 +145,8 @@ module Commands
     suggestions = DidYouMean::SpellChecker.new(dictionary: commands(aliases: true)).correct(cmd) if suggestions.empty?
     return "" if suggestions.empty?
 
-    "\nDid you mean #{suggestions.to_sentence(two_words_connector: " or ", last_word_connector: " or ")}?"
+    "\nDid you mean #{Homebrew.to_sentence(suggestions, two_words_connector: " or ",
+                                                        last_word_connector: " or ")}?"
   end
 
   # An array of all tap cmd directory {Pathname}s.

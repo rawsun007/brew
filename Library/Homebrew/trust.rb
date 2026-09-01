@@ -229,7 +229,6 @@ module Homebrew
       full_name = "#{tap.name}/#{::Utils.name_from_full_name(name)}"
       return if trusted?(:formula, full_name)
       return if explicitly_allowed?(:formula, full_name, tap)
-      return unless Homebrew::EnvConfig.require_tap_trust?
 
       raise_untrusted!(:formula, full_name, tap)
     end
@@ -243,7 +242,6 @@ module Homebrew
       full_name = "#{tap.name}/#{::Utils.name_from_full_name(token)}"
       return if trusted?(:cask, full_name)
       return if explicitly_allowed?(:cask, full_name, tap)
-      return unless Homebrew::EnvConfig.require_tap_trust?
 
       raise_untrusted!(:cask, full_name, tap)
     end
@@ -256,7 +254,6 @@ module Homebrew
 
       full_name = "#{tap.name}/#{command || path.basename(path.extname).to_s.delete_prefix("brew-")}"
       return if trusted?(:command, full_name)
-      return unless Homebrew::EnvConfig.require_tap_trust?
 
       raise_untrusted!(:command, full_name, tap)
     end
@@ -563,7 +560,7 @@ module Homebrew
       return true if trusted?(type, full_name)
       return true if explicitly_allowed?(type, full_name, tap)
 
-      !Homebrew::EnvConfig.require_tap_trust?
+      false
     end
     private_class_method :trusted_file?
 
@@ -584,8 +581,6 @@ module Homebrew
     sig { params(type: Symbol, files: T::Array[Pathname]).returns(T::Array[Pathname]) }
     def self.trusted_files(type, files)
       trusted_files = files.select { |file| trusted_file?(type, file) }
-      return trusted_files unless Homebrew::EnvConfig.require_tap_trust?
-
       skipped_taps = (files - trusted_files).filter_map { |file| tap_from_path(file) }.uniq.sort_by(&:name)
       skipped_taps.each do |tap|
         next if partially_trusted_tap?(tap)

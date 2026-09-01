@@ -28,7 +28,7 @@ RSpec.describe Homebrew::DevCmd::Cat do
       executable:       "bat",
     ).and_return(Pathname.new("/usr/bin/bat"))
 
-    expect(cat).to receive(:safe_system).with(Pathname.new("/usr/bin/bat"), formula_file)
+    expect(Homebrew).to receive(:safe_system).with(Pathname.new("/usr/bin/bat"), formula_file)
 
     cat.run
   end

@@ -79,7 +79,7 @@ module Cask
         sample_languages = if blocks.length > LANGUAGE_BLOCK_LIMIT && !@audit_new_cask
           sample_keys = T.must(blocks.keys.sample(LANGUAGE_BLOCK_LIMIT))
           ohai "Auditing a sample of available languages for #{cask}: " \
-               "#{sample_keys.map { |lang| lang[0].to_s }.to_sentence}"
+               "#{Homebrew.to_sentence(sample_keys.map { |lang| lang[0].to_s })}"
           blocks.select { |k| sample_keys.include?(k) }
         else
           blocks
@@ -88,7 +88,7 @@ module Cask
         sample_languages.each_key do |l|
           audit = audit_languages(l)
           if audit.summary.present? && output_summary?(audit)
-            ohai "Auditing language: #{l.map { |lang| "'#{lang}'" }.to_sentence}" if output_summary?
+            ohai "Auditing language: #{Homebrew.to_sentence(l.map { |lang| "'#{lang}'" })}" if output_summary?
             puts audit.summary
           end
           errors += audit.errors

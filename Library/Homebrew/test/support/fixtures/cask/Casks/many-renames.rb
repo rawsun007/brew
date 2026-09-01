@@ -11,20 +11,4 @@ cask "many-renames" do
   rename "Foo.app", "Bar.app"
 
   app "Bar.app"
-
-  preflight do
-    # do nothing
-  end
-
-  postflight do
-    # do nothing
-  end
-
-  uninstall_preflight do
-    # do nothing
-  end
-
-  uninstall_postflight do
-    # do nothing
-  end
 end

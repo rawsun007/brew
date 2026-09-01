@@ -18,8 +18,7 @@ defaults:
     shell: bash -xeuo pipefail {0}
 
 env:
-  # odeprecated: remove 22.04 image in Homebrew >=6.1
-  VERSIONS: '["22.04", "24.04", "26.04"]'
+  VERSIONS: '["24.04", "26.04"]'
 
 jobs:
   generate-tags:
@@ -144,8 +143,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # odeprecated: remove 22.04 image in Homebrew >=6.1
-        version: ["22.04", "24.04", "26.04"]
+        version: ["24.04", "26.04"]
         arch: ["x86_64", "arm64"]
 
     steps:
@@ -169,11 +167,6 @@ jobs:
           VERSION: ${{ matrix.version }}
           PUSH: ${{ needs.generate-tags.outputs.push }}
         run: |
-          # odeprecated: remove 22.04 image in Homebrew >=6.1
-          if [[ "${VERSION}" == "22.04" ]]; then
-            echo "The homebrew/ubuntu22.04 image is deprecated and will be retired in Homebrew 6.1. Use homebrew/brew." > .docker-deprecate
-          fi
-
           filter="$(printf '.["%s"]' "${VERSION}")"
           echo "push=$(jq --raw-output "${filter}" <<<"${PUSH}")" >>"${GITHUB_OUTPUT}"
 
@@ -195,11 +188,6 @@ jobs:
             version=${{ matrix.version }}
             HOMEBREW_CORE_REVISION=${{ needs.generate-tags.outputs.core_revision }}
           labels: ${{ needs.generate-tags.outputs.labels }}
-
-      - name: Set environment variables
-        if: matrix.version == '22.04'
-        # odeprecated: remove 22.04 in Homebrew >=6.1
-        run: echo "HOMEBREW_GLIBC_TESTING=1" >> "$GITHUB_ENV"
 
       - name: Run brew test-bot --only-setup
         run: docker run --env HOMEBREW_GLIBC_TESTING --rm brew brew test-bot --only-setup

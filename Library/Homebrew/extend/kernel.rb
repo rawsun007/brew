@@ -9,38 +9,27 @@ require "utils/output"
 module Kernel
   sig { params(env: T.nilable(String)).returns(T::Boolean) }
   def superenv?(env)
-    return false if env == "std"
+    Utils::Output.odeprecated "Kernel#superenv?", "Homebrew.superenv?"
+    require "homebrew"
 
-    !Superenv.bin.nil?
+    Homebrew.superenv?(env)
   end
   private :superenv?
 
   sig { params(formula: T.nilable(Formula)).void }
   def interactive_shell(formula = nil)
-    unless formula.nil?
-      ENV["HOMEBREW_DEBUG_PREFIX"] = formula.prefix.to_s
-      ENV["HOMEBREW_DEBUG_INSTALL"] = formula.full_name
-    end
+    Utils::Output.odeprecated "Kernel#interactive_shell", "Homebrew.interactive_shell"
+    require "homebrew"
 
-    if Utils::Shell.preferred == :zsh && (home = Dir.home).start_with?(HOMEBREW_TEMP.resolved_path.to_s)
-      FileUtils.mkdir_p home
-      FileUtils.touch "#{home}/.zshrc"
-    end
-
-    term = ENV.fetch("HOMEBREW_TERM", ENV.fetch("TERM", nil))
-    with_env(TERM: term) do
-      Process.wait fork { exec Utils::Shell.preferred_path(default: "/bin/bash") }
-    end
-
-    return if $CHILD_STATUS.success?
-    raise "Aborted due to non-zero exit status (#{$CHILD_STATUS.exitstatus})" if $CHILD_STATUS.exited?
-
-    raise $CHILD_STATUS.inspect
+    Homebrew.interactive_shell(formula)
   end
 
   sig { type_parameters(:U).params(block: T.proc.returns(T.type_parameter(:U))).returns(T.type_parameter(:U)) }
   def with_homebrew_path(&block)
-    with_env(PATH: PATH.new(ORIGINAL_PATHS).to_s, &block)
+    Utils::Output.odeprecated "Kernel#with_homebrew_path", "Homebrew.with_homebrew_path"
+    require "homebrew"
+
+    Homebrew.with_homebrew_path(&block)
   end
 
   # Kernel.system but with exceptions.
@@ -97,99 +86,55 @@ module Kernel
 
   sig { params(silent: T::Boolean).returns(String) }
   def which_editor(silent: false)
-    editor = Homebrew::EnvConfig.editor
-    return editor if editor
+    Utils::Output.odeprecated "Kernel#which_editor", "Homebrew.which_editor"
+    require "homebrew"
 
-    # Find VS Code variants, Sublime Text, Textmate, BBEdit, or vim
-    editor = %w[code codium cursor code-insiders subl mate bbedit vim].find do |candidate|
-      candidate if which(candidate, ORIGINAL_PATHS)
-    end
-    editor ||= "vim"
-
-    unless silent
-      Utils::Output.opoo <<~EOS
-        Using #{editor} because no editor was set in the environment.
-        This may change in the future, so we recommend setting `$EDITOR`
-        or `$HOMEBREW_EDITOR` to your preferred text editor.
-      EOS
-    end
-
-    editor
+    Homebrew.which_editor(silent:)
   end
 
   sig { params(filenames: T.any(String, Pathname)).void }
   def exec_editor(*filenames)
-    puts "Editing #{filenames.join "\n"}"
-    with_homebrew_path { safe_system(*which_editor.shellsplit, *filenames) }
+    Utils::Output.odeprecated "Kernel#exec_editor", "Homebrew.exec_editor"
+    require "homebrew"
+
+    Homebrew.exec_editor(*filenames)
   end
 
   sig { params(args: T.any(String, Pathname)).void }
   def exec_browser(*args)
-    browser = Homebrew::EnvConfig.browser
-    browser ||= OS::PATH_OPEN if defined?(OS::PATH_OPEN)
-    return unless browser
+    Utils::Output.odeprecated "Kernel#exec_browser", "Homebrew.exec_browser"
+    require "homebrew"
 
-    ENV["DISPLAY"] = Homebrew::EnvConfig.display
-
-    with_env(DBUS_SESSION_BUS_ADDRESS: ENV.fetch("HOMEBREW_DBUS_SESSION_BUS_ADDRESS", nil)) do
-      safe_system(browser, *args)
-    end
+    Homebrew.exec_browser(*args)
   end
 
-  IGNORE_INTERRUPTS_MUTEX = Thread::Mutex.new.freeze
+  sig { type_parameters(:U).params(block: T.proc.returns(T.type_parameter(:U))).returns(T.type_parameter(:U)) }
+  def ignore_interrupts(&block)
+    Utils::Output.odeprecated "Kernel#ignore_interrupts", "Homebrew.ignore_interrupts"
+    require "homebrew"
 
-  sig { type_parameters(:U).params(_block: T.proc.returns(T.type_parameter(:U))).returns(T.type_parameter(:U)) }
-  def ignore_interrupts(&_block)
-    IGNORE_INTERRUPTS_MUTEX.synchronize do
-      interrupted = T.let(false, T::Boolean)
-      old_sigint_handler = trap(:INT) do
-        interrupted = true
-
-        $stderr.print "\n"
-        $stderr.puts "One sec, cleaning up..."
-      end
-
-      begin
-        yield
-      ensure
-        trap(:INT, old_sigint_handler)
-
-        raise Interrupt if interrupted
-      end
-    end
+    Homebrew.ignore_interrupts(&block)
   end
 
   sig {
     type_parameters(:U)
-      .params(file: T.any(IO, Pathname, String), _block: T.proc.returns(T.type_parameter(:U)))
+      .params(file: T.any(IO, Pathname, String), block: T.proc.returns(T.type_parameter(:U)))
       .returns(T.type_parameter(:U))
   }
-  def redirect_stdout(file, &_block)
-    out = $stdout.dup
-    $stdout.reopen(file)
-    yield
-  ensure
-    $stdout.reopen(out)
-    out.close
+  def redirect_stdout(file, &block)
+    Utils::Output.odeprecated "Kernel#redirect_stdout", "Homebrew.redirect_stdout"
+    require "homebrew"
+
+    Homebrew.redirect_stdout(file, &block)
   end
 
   # Ensure the given executable exists otherwise install the brewed version
   sig { params(name: String, formula_name: T.nilable(String), reason: String, latest: T::Boolean).returns(Pathname) }
   def ensure_executable!(name, formula_name = nil, reason: "", latest: false)
-    formula_name ||= name
+    Utils::Output.odeprecated "Kernel#ensure_executable!", "Homebrew.ensure_executable!"
+    require "homebrew"
 
-    executable = [
-      which(name),
-      which(name, ORIGINAL_PATHS),
-      # We prefer the opt_bin path to a formula's executable over the prefix
-      # path where available, since the former is stable during upgrades.
-      HOMEBREW_PREFIX/"opt/#{formula_name}/bin/#{name}",
-      HOMEBREW_PREFIX/"bin/#{name}",
-    ].compact.find(&:exist?)
-    return executable if executable
-
-    require "formula"
-    T.cast(Formula[formula_name].ensure_installed!(reason:, latest:, executable: name), Pathname)
+    Homebrew.ensure_executable!(name, formula_name, reason:, latest:)
   end
 
   # Calls the given block with the passed environment variables

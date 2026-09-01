@@ -113,7 +113,7 @@ module Homebrew
       sig { void }
       def edit
         write(override: false)
-        exec_editor script.to_s
+        Homebrew.exec_editor script.to_s
       end
     end
   end

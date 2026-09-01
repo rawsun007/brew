@@ -27,7 +27,7 @@ class LockFile
 
   sig { void }
   def lock
-    ignore_interrupts do
+    Homebrew.ignore_interrupts do
       next if @lockfile.present?
 
       path.dirname.mkpath
@@ -72,7 +72,7 @@ class LockFile
 
   sig { params(unlink: T::Boolean).void }
   def unlock(unlink: false)
-    ignore_interrupts do
+    Homebrew.ignore_interrupts do
       next if @lockfile.nil?
 
       @path.unlink if unlink

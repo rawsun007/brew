@@ -14,7 +14,7 @@ module Homebrew
 
       sig { override.void }
       def run
-        exec_browser HOMEBREW_DOCS_WWW
+        Homebrew.exec_browser HOMEBREW_DOCS_WWW
       end
     end
   end

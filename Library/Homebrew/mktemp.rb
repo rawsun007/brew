@@ -70,7 +70,7 @@ class Mktemp
         yield self
       end
     ensure
-      ignore_interrupts { chmod_rm_rf(@tmpdir) } unless retain?
+      Homebrew.ignore_interrupts { chmod_rm_rf(@tmpdir) } unless retain?
     end
   ensure
     if retain? && @tmpdir.present? && !@quiet

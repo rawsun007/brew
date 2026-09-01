@@ -197,12 +197,16 @@ module Cask
           raise "`depends_on :macos` cannot be combined with another macOS `depends_on`" if @macos_bare_set_top_level
 
           if @macos_version_set_top_level || @maximum_macos_set_top_level
-            odeprecated "`depends_on :macos` with `depends_on macos:`"
+            odisabled "combining `depends_on :macos` with a versioned macOS dependency",
+                      "only the versioned macOS dependency"
           end
 
           @macos_bare_set_top_level = true
         elsif requirement.comparator == "<="
-          odeprecated "`depends_on :macos` with `depends_on maximum_macos:`" if @macos_bare_set_top_level
+          if @macos_bare_set_top_level
+            odisabled "combining `depends_on :macos` with `depends_on maximum_macos:`",
+                      "only `depends_on maximum_macos:`"
+          end
 
           if @maximum_macos_set_top_level
             raise "`depends_on maximum_macos:` cannot be combined with another macOS `depends_on`"
@@ -210,7 +214,9 @@ module Cask
 
           @maximum_macos_set_top_level = true
         else
-          odeprecated "`depends_on :macos` with `depends_on macos:`" if @macos_bare_set_top_level
+          if @macos_bare_set_top_level
+            odisabled "combining `depends_on :macos` with `depends_on macos:`", "only `depends_on macos:`"
+          end
 
           if @macos_version_set_top_level
             raise "`depends_on macos:` cannot be combined with another macOS `depends_on`"

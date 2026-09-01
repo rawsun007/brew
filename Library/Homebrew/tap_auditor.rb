@@ -106,7 +106,7 @@ module Homebrew
       duplicates = formula_aliases & formula_renames.keys
       return if duplicates.none?
 
-      problem "The following should either be an alias or a rename, not both: #{duplicates.to_sentence}"
+      problem "The following should either be an alias or a rename, not both: #{Homebrew.to_sentence(duplicates)}"
     end
 
     sig { params(message: String).void }

@@ -353,9 +353,7 @@ to one or more of the following environment variables:
 
 `--force-cleanup`
 
-: Perform cleanup after installing dependencies without asking. Enabled by
-  default if `$HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP` is set and `--global` is
-  passed.
+: Perform cleanup after installing dependencies without asking.
 
 `--zap`
 
@@ -4555,10 +4553,6 @@ command execution (e.g. `$(cat file)`).
 
 : If set, `brew bundle dump` will not dump WinGet packages.
 
-`HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP`
-
-: If set, run `brew bundle cleanup --force` after `brew bundle install`.
-
 `HOMEBREW_BUNDLE_NO_DESCRIBE`
 
 : If set, do not enable bundle description comments from
@@ -5006,16 +5000,6 @@ command execution (e.g. `$(cat file)`).
 : If set, do not relocate bottles built for a different prefix at install time.
   Homebrew will build from source instead.
 
-`HOMEBREW_NO_REQUIRE_TAP_TRUST`
-
-: If set, do not require non-official tap formulae, casks or commands to be
-  trusted. This is not recommended and will be removed in a later release. Also
-  enables commands that evaluate all formulae and casks.
-
-`HOMEBREW_NO_SANDBOX_LINUX`
-
-: If set, disable the Linux sandbox.
-
 `HOMEBREW_NO_UPDATE_REPORT_NEW`
 
 : If set, `brew update` will not show the list of newly added formulae/casks.
@@ -5041,15 +5025,6 @@ command execution (e.g. `$(cat file)`).
   resources.
   
   *Default:* `https://pypi.org/simple`.
-
-`HOMEBREW_REQUIRE_TAP_TRUST`
-
-: If set, require non-official tap formulae, casks and commands to be trusted
-  with `brew trust` before Homebrew loads them. This is the default unless
-  `$HOMEBREW_NO_REQUIRE_TAP_TRUST` is set. Also enables commands that evaluate
-  all formulae and casks.
-  
-  *Default:* `true`.
 
 `HOMEBREW_SIMULATE_MACOS_ON_LINUX`
 

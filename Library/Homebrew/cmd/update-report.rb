@@ -34,7 +34,7 @@ module Homebrew
       def run
         return output_update_report if $stdout.tty?
 
-        redirect_stdout($stderr) do
+        Homebrew.redirect_stdout($stderr) do
           output_update_report
         end
       end
@@ -107,11 +107,12 @@ module Homebrew
                   before_revision = ENV.fetch("HOMEBREW_UPDATE_BEFORE#{old_repository_var_suffix}", nil)
                   if before_revision.present? && tap.installed?
                     git_args = ["-C", tap.path.to_s]
-                    safe_system "git", *git_args, "reset", "--hard", "-q", before_revision
+                    Homebrew.safe_system "git", *git_args, "reset", "--hard", "-q", before_revision
                     branch = Utils.popen_read("git", *git_args, "symbolic-ref", "--short", "-q", "HEAD").chomp
                     branch = branch.presence || tap.git_repository.origin_branch_name
                     if branch.present?
-                      safe_system "git", *git_args, "update-ref", "refs/remotes/origin/#{branch}", before_revision
+                      Homebrew.safe_system "git", *git_args, "update-ref", "refs/remotes/origin/#{branch}",
+                                           before_revision
                     end
                   end
                   denied_redirects << e.message
@@ -236,7 +237,7 @@ module Homebrew
         unless updated_taps.empty?
           auto_update_header
           puts "Updated #{Utils.pluralize("tap", updated_taps.count,
-                                          include_count: true)} (#{updated_taps.to_sentence})."
+                                          include_count: true)} (#{Homebrew.to_sentence(updated_taps)})."
           updated = true
         end
 
@@ -280,8 +281,8 @@ module Homebrew
         # for code-only updates this run has already recompiled most of
         # what the next command needs.
         if !args.auto_update? && initial_revision != current_revision &&
-           !quiet_system("git", "-C", HOMEBREW_REPOSITORY.to_s, "diff", "--quiet",
-                         initial_revision, current_revision, "--", "Library/Homebrew/vendor")
+           !Homebrew.quiet_system("git", "-C", HOMEBREW_REPOSITORY.to_s, "diff", "--quiet",
+                                  initial_revision, current_revision, "--", "Library/Homebrew/vendor")
           Homebrew::Bootsnap.prewarm!
         end
 

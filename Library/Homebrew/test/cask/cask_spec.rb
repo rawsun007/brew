@@ -69,10 +69,8 @@ RSpec.describe Cask::Cask, :cask do
       allow(Tap).to receive(:reject).and_return([tap])
       expect(Cask::CaskLoader).not_to receive(:load).with(cask_path)
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        expect { expect(described_class.all(eval_all: true)).to eq([]) }
-          .to output(%r{Skipping thirdparty/foo because it is not trusted}).to_stderr
-      end
+      expect { expect(described_class.all).to eq([]) }
+        .to output(%r{Skipping thirdparty/foo because it is not trusted}).to_stderr
     ensure
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"
     end
@@ -80,10 +78,9 @@ RSpec.describe Cask::Cask, :cask do
     it "allows all casks when trust is disabled" do
       allow(CoreCaskTap.instance).to receive(:cask_tokens).and_return([])
       allow(Tap).to receive(:reject).and_return([])
+      allow(Homebrew::EnvConfig).to receive(:no_require_tap_trust?).and_return(true)
 
-      with_env(HOMEBREW_NO_REQUIRE_TAP_TRUST: "1") do
-        expect(described_class.all).to eq([])
-      end
+      expect(described_class.all).to eq([])
     end
 
     it "skips invalid casks instead of aborting" do
@@ -102,11 +99,10 @@ RSpec.describe Cask::Cask, :cask do
 
       allow(CoreCaskTap.instance).to receive(:cask_tokens).and_return([])
       allow(Tap).to receive(:reject).and_return([tap])
+      allow(Homebrew::EnvConfig).to receive(:no_require_tap_trust?).and_return(true)
 
-      with_env(HOMEBREW_NO_REQUIRE_TAP_TRUST: "1") do
-        expect { expect(described_class.all).to eq([]) }
-          .to output(/Cask 'mismatch' definition is invalid/).to_stderr
-      end
+      expect { expect(described_class.all).to eq([]) }
+        .to output(/Cask 'mismatch' definition is invalid/).to_stderr
     ensure
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"
     end
@@ -532,9 +528,8 @@ RSpec.describe Cask::Cask, :cask do
 
     context "when it is from a non-core tap" do
       it "returns the fully-qualified name of the cask" do
-        c = with_env(HOMEBREW_NO_REQUIRE_TAP_TRUST: "1") do
-          Cask::CaskLoader.load("third-party/tap/third-party-cask")
-        end
+        allow(Homebrew::EnvConfig).to receive(:no_require_tap_trust?).and_return(true)
+        c = Cask::CaskLoader.load("third-party/tap/third-party-cask")
         expect(c.full_name).to eq("third-party/tap/third-party-cask")
       end
     end
@@ -560,6 +555,11 @@ RSpec.describe Cask::Cask, :cask do
 
   describe "#artifacts_list" do
     subject(:cask) { Cask::CaskLoader.load("many-artifacts") }
+
+    before do
+      ENV["HOMEBREW_DEVELOPER"] = nil
+      Homebrew.raise_deprecation_exceptions = false
+    end
 
     it "returns all artifacts when no options are given" do
       expected_artifacts = [
@@ -613,6 +613,11 @@ RSpec.describe Cask::Cask, :cask do
   end
 
   describe "#uninstall_flight_blocks?" do
+    before do
+      ENV["HOMEBREW_DEVELOPER"] = nil
+      Homebrew.raise_deprecation_exceptions = false
+    end
+
     matcher :have_uninstall_flight_blocks do
       match do |actual|
         actual.uninstall_flight_blocks? == true

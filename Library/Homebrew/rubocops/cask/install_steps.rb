@@ -21,7 +21,7 @@ module RuboCop
           }.freeze,
           T::Hash[Symbol, Symbol],
         )
-        LEGACY_FLIGHT_MSG = "Casks in official Homebrew taps must use `%<steps>s` instead of `%<flight>s`."
+        LEGACY_FLIGHT_MSG = "Casks must use `%<steps>s` instead of `%<flight>s`."
         KEYCHAIN_HASHES_SOURCE =
           'hashes = stdout.lines.grep(/^SHA-256 hash:/) { |l| l.split(":").second.strip }'
         KEYCHAIN_DELETE_SOURCE = T.let(
@@ -63,8 +63,6 @@ module RuboCop
             steps_stanza = stanzas.find { |stanza| stanza.stanza_name == steps_block }
             converted_flight = autocorrect_flight_block?(flight_stanza, steps_block) if steps_stanza.nil?
 
-            # odeprecated: remove the official-tap scope in the next major or minor release.
-            next unless official_homebrew_tap?(processed_source.file_path)
             next if converted_flight
 
             add_offense(flight_stanza.method_node,

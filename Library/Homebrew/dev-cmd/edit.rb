@@ -31,7 +31,7 @@ module Homebrew
         ENV["TMPDIR"] = ENV.fetch("HOMEBREW_TMPDIR", nil)
 
         # VS Code remote development relies on this env var to work
-        if which_editor(silent: true) == "code" && ENV.include?("HOMEBREW_VSCODE_IPC_HOOK_CLI")
+        if Homebrew.which_editor(silent: true) == "code" && ENV.include?("HOMEBREW_VSCODE_IPC_HOOK_CLI")
           ENV["VSCODE_IPC_HOOK_CLI"] = ENV.fetch("HOMEBREW_VSCODE_IPC_HOOK_CLI", nil)
         end
 
@@ -46,7 +46,7 @@ module Homebrew
         paths = if args.named.empty?
           # Sublime requires opting into the project editing path,
           # as opposed to VS Code which will infer from the .vscode path
-          if which_editor(silent: true) == "subl"
+          if Homebrew.which_editor(silent: true) == "subl"
             ["--project", HOMEBREW_REPOSITORY/".sublime/homebrew.sublime-project"]
           else
             # If no formulae are listed, open the project root in an editor.
@@ -75,7 +75,7 @@ module Homebrew
           return
         end
 
-        exec_editor(*paths)
+        Homebrew.exec_editor(*paths)
 
         is_formula = T.let(false, T::Boolean)
         if !Homebrew::EnvConfig.no_env_hints? && paths.any? do |path|

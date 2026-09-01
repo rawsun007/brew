@@ -502,29 +502,6 @@ RSpec.describe Cask::Audit, :cask do
       end
     end
 
-    describe "pkg allow_untrusted checks" do
-      let(:only) { ["untrusted_pkg"] }
-      let(:message) { "allow_untrusted is not permitted in the official homebrew/cask tap" }
-
-      context "when the Cask has no pkg stanza" do
-        let(:cask_token) { "basic-cask" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask does not have allow_untrusted" do
-        let(:cask_token) { "with-uninstall-pkgutil" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has allow_untrusted" do
-        let(:cask_token) { "with-allow-untrusted" }
-
-        it { is_expected.to error_with(message) }
-      end
-    end
-
     describe "signing checks" do
       let(:only) { ["signing"] }
       let(:tap) { CoreCaskTap.instance }
@@ -915,94 +892,6 @@ RSpec.describe Cask::Audit, :cask do
 
       context "when the pkg Cask does not have an uninstall" do
         let(:cask_token) { "pkg-without-uninstall" }
-
-        it { is_expected.to error_with(message) }
-      end
-    end
-
-    describe "preflight stanza checks" do
-      let(:message) { "only a single preflight stanza is allowed" }
-
-      context "when the Cask has no preflight stanza" do
-        let(:cask_token) { "with-zap-rmdir" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has only one preflight stanza" do
-        let(:cask_token) { "with-preflight" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has multiple preflight stanzas" do
-        let(:cask_token) { "with-preflight-multi" }
-
-        it { is_expected.to error_with(message) }
-      end
-    end
-
-    describe "postflight stanza checks" do
-      let(:message) { "only a single postflight stanza is allowed" }
-
-      context "when the Cask has no postflight stanza" do
-        let(:cask_token) { "with-zap-rmdir" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has only one postflight stanza" do
-        let(:cask_token) { "with-postflight" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has multiple postflight stanzas" do
-        let(:cask_token) { "with-postflight-multi" }
-
-        it { is_expected.to error_with(message) }
-      end
-    end
-
-    describe "uninstall_preflight stanza checks" do
-      let(:message) { "only a single uninstall_preflight stanza is allowed" }
-
-      context "when the Cask has no uninstall_preflight stanza" do
-        let(:cask_token) { "with-zap-rmdir" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has only one uninstall_preflight stanza" do
-        let(:cask_token) { "with-uninstall-preflight" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has multiple uninstall_preflight stanzas" do
-        let(:cask_token) { "with-uninstall-preflight-multi" }
-
-        it { is_expected.to error_with(message) }
-      end
-    end
-
-    describe "uninstall_postflight stanza checks" do
-      let(:message) { "only a single uninstall_postflight stanza is allowed" }
-
-      context "when the Cask has no uninstall_postflight stanza" do
-        let(:cask_token) { "with-zap-rmdir" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has only one uninstall_postflight stanza" do
-        let(:cask_token) { "with-uninstall-postflight" }
-
-        it { is_expected.not_to error_with(message) }
-      end
-
-      context "when the Cask has multiple uninstall_postflight stanzas" do
-        let(:cask_token) { "with-uninstall-postflight-multi" }
 
         it { is_expected.to error_with(message) }
       end
@@ -1794,48 +1683,6 @@ RSpec.describe Cask::Audit, :cask do
         it "passes" do
           expect(run).to pass
         end
-      end
-    end
-
-    describe "checking url" do
-      let(:only) { %w[unnecessary_verified] }
-
-      context "with verified" do
-        let(:cask_token) { "with-verified" }
-        let(:cask) do
-          tmp_cask cask_token.to_s, <<~RUBY
-            cask "#{cask_token}" do
-              version "1.8.0_72,8.13.0.5"
-              sha256 "8dd95daa037ac02455435446ec7bc737b34567afe9156af7d20b2a83805c1d8a"
-              url "https://brew.sh/foo-\#{version.after_comma}.zip", verified: "brew.sh/"
-              name "Audit"
-              desc "Audit Description"
-              homepage "https://foo.example.org"
-              app "Audit.app"
-            end
-          RUBY
-        end
-
-        it { is_expected.to error_with(/the `verified` parameter has been deprecated/) }
-      end
-
-      context "without verified" do
-        let(:cask_token) { "without-verified" }
-        let(:cask) do
-          tmp_cask cask_token.to_s, <<~RUBY
-            cask "#{cask_token}" do
-              version "1.8.0_72,8.13.0.5"
-              sha256 "8dd95daa037ac02455435446ec7bc737b34567afe9156af7d20b2a83805c1d8a"
-              url "https://brew.sh/foo-\#{version.after_comma}.zip"
-              name "Audit"
-              desc "Audit Description"
-              homepage "https://foo.example.org"
-              app "Audit.app"
-            end
-          RUBY
-        end
-
-        it { is_expected.to pass }
       end
     end
 

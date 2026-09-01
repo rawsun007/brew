@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "utils/output"
+
 class Hash
   # Validates all keys in a hash match `*valid_keys`, raising
   # `ArgumentError` on a mismatch.
@@ -19,13 +21,10 @@ class Hash
   # ```
   sig { params(valid_keys: T.untyped).void }
   def assert_valid_keys(*valid_keys)
-    valid_keys.flatten!
-    each_key do |k|
-      next if valid_keys.include?(k)
+    Utils::Output.odeprecated "Hash#assert_valid_keys", "Homebrew.assert_valid_keys"
+    require "homebrew"
 
-      raise ArgumentError,
-            "Unknown key: #{T.unsafe(k).inspect}. Valid keys are: #{valid_keys.map(&:inspect).join(", ")}"
-    end
+    Homebrew.assert_valid_keys(self, *valid_keys)
   end
 
   # Returns a new hash with all keys converted by the block operation.

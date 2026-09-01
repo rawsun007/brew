@@ -104,6 +104,23 @@ RSpec.describe Homebrew::Cmd::Update do
     expect(args_file.read).to eq("upgrade\ntestball\n--auto-update\n--merge\n")
   end
 
+  it "disables `--merge` in the shell implementation" do
+    setup_update_utils
+
+    _stdout, stderr, status = run_update_shell(
+      <<~SH,
+        source "#{update_script}"
+        odie() { echo "Error: $*" >&2; exit 1; }
+        homebrew-update --merge
+      SH
+      { "HOMEBREW_LIBRARY" => (test_root/"Library").to_s },
+    )
+
+    expect([status.success?, stderr]).to eq(
+      [false, "Error: Calling the `--merge` switch is disabled! There is no replacement.\n"],
+    )
+  end
+
   it "passes `--auto-update` through to `update-report`" do
     args_file = test_root/"brew-args.txt"
     setup_update_utils

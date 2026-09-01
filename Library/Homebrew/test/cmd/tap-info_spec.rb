@@ -55,10 +55,8 @@ RSpec.describe Homebrew::Cmd::TapInfo do
     allow(tap_info).to receive(:print_tap_listings).with(tap)
     allow(Homebrew::Trust).to receive(:trusted_tap?).with(tap).and_return(true)
 
-    with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-      expect { tap_info.print_tap_info([tap]) }
-        .to output(%r{thirdparty/foo: Installed\nTrusted\nNo commands/casks/formulae}).to_stdout
-    end
+    expect { tap_info.print_tap_info([tap]) }
+      .to output(%r{thirdparty/foo: Installed\nTrusted\nNo commands/casks/formulae}).to_stdout
   end
 
   it "prints untrusted tap status when tap trust is required" do
@@ -83,10 +81,8 @@ RSpec.describe Homebrew::Cmd::TapInfo do
     allow(tap_info).to receive(:print_tap_listings).with(tap)
     allow(Homebrew::Trust).to receive(:trusted_tap?).with(tap).and_return(false)
 
-    with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-      expect { tap_info.print_tap_info([tap]) }
-        .to output(%r{thirdparty/foo: Installed\nUntrusted\nNo commands/casks/formulae}).to_stdout
-    end
+    expect { tap_info.print_tap_info([tap]) }
+      .to output(%r{thirdparty/foo: Installed\nUntrusted\nNo commands/casks/formulae}).to_stdout
   end
 
   describe "#print_tap_json" do

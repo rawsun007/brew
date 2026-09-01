@@ -578,7 +578,7 @@ class Tap
       old_path = path
       redirected_tap.path.dirname.mkpath
       FileUtils.mv(old_path, redirected_tap.path)
-      old_path.parent.rmdir_if_possible
+      Utils::Path.rmdir_if_possible(old_path.parent)
 
       @user = redirected_tap.user
       @repository = redirected_tap.repository
@@ -590,7 +590,7 @@ class Tap
       clear_cache
     end
 
-    safe_system "git", "-C", path, "remote", "set-url", "origin", "--end-of-options", redirected_remote
+    Homebrew.safe_system "git", "-C", path, "remote", "set-url", "origin", "--end-of-options", redirected_remote
     clear_cache
     Tap.clear_cache
 
@@ -744,7 +744,7 @@ class Tap
         worktree_args = ["-c", "core.hooksPath=#{File::NULL}", "-C", worktree_source_tap_path, "worktree", "add"]
         worktree_args << "--quiet" if quiet
         worktree_args += ["--detach", path, worktree_head]
-        safe_system "git", *worktree_args
+        Homebrew.safe_system "git", *worktree_args
       else
         result = git_command!(args)
         update_remote_from_git_redirect!(result.stderr, quiet:)
@@ -754,11 +754,11 @@ class Tap
         raise "Cannot tap #{name}: invalid syntax in tap!"
       end
     rescue Interrupt, RuntimeError
-      ignore_interrupts do
+      Homebrew.ignore_interrupts do
         # wait for git to possibly cleanup the top directory when interrupt happens.
         sleep 0.1
         FileUtils.rm_rf path
-        path.parent.rmdir_if_possible
+        Utils::Path.rmdir_if_possible(path.parent)
       end
       raise
     end
@@ -766,7 +766,7 @@ class Tap
     Commands.rebuild_commands_completion_list
     link_completions_and_manpages
 
-    formatted_contents = contents.presence&.to_sentence&.prepend(" ")
+    formatted_contents = Homebrew.to_sentence(contents).presence&.prepend(" ")
     $stderr.puts "Tapped#{formatted_contents} (#{path.abv})." unless quiet
 
     require "description_cache_store"
@@ -831,8 +831,8 @@ class Tap
   def fix_remote_configuration(requested_remote: nil, quiet: false)
     if requested_remote.present?
       path.cd do
-        safe_system "git", "remote", "set-url", "origin", "--end-of-options", requested_remote
-        safe_system "git", "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"
+        Homebrew.safe_system "git", "remote", "set-url", "origin", "--end-of-options", requested_remote
+        Homebrew.safe_system "git", "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"
       end
       $stderr.ohai "#{name}: changed remote from #{remote} to #{requested_remote}" unless quiet
     end
@@ -855,7 +855,7 @@ class Tap
     new_upstream_head = T.must(git_repository.origin_branch_name)
     return if new_upstream_head == current_upstream_head
 
-    safe_system "git", "-C", path, "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"
+    Homebrew.safe_system "git", "-C", path, "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"
     git_repository.rename_branch old: current_upstream_head, new: new_upstream_head
     git_repository.set_upstream_branch local: new_upstream_head, origin: new_upstream_head
 
@@ -875,7 +875,7 @@ class Tap
     $stderr.puts "Untapping #{name}..."
 
     abv = path.abv
-    formatted_contents = contents.presence&.to_sentence&.prepend(" ")
+    formatted_contents = Homebrew.to_sentence(contents).presence&.prepend(" ")
 
     require "description_cache_store"
     CacheStoreDatabase.use(:descriptions) do |db|
@@ -891,10 +891,10 @@ class Tap
     Utils::Link.unlink_manpages(path)
     Utils::Link.unlink_completions(path)
     if (worktree_source_tap_path = worktree_source_tap_path_for(path:))
-      safe_system "git", "-C", worktree_source_tap_path, "worktree", "remove", "--force", path
+      Homebrew.safe_system "git", "-C", worktree_source_tap_path, "worktree", "remove", "--force", path
     end
     FileUtils.rm_r(path) if path.exist?
-    path.parent.rmdir_if_possible
+    Utils::Path.rmdir_if_possible(path.parent)
     $stderr.puts "Untapped#{formatted_contents} (#{abv})."
 
     Commands.rebuild_commands_completion_list
@@ -1150,7 +1150,8 @@ class Tap
   sig { overridable.returns(T::Hash[String, String]) }
   def alias_table
     @alias_table ||= T.let(alias_files.to_h do |alias_file|
-                             [alias_file_to_name(alias_file), formula_file_to_name(alias_file.resolved_path)]
+                             [alias_file_to_name(alias_file),
+                              formula_file_to_name(Utils::Path.resolved_path(alias_file))]
                            end, T.nilable(T::Hash[String, String]))
   end
 

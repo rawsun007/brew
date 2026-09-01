@@ -15,7 +15,7 @@ module Homebrew
                description: "Print the updated resource blocks instead of changing <formula>."
         switch "-s", "--silent",
                description: "Suppress any output.",
-               odeprecated: true
+               odisabled:   true
         switch "--ignore-errors",
                description: "Continue processing even if some resources can't be resolved."
 
@@ -29,7 +29,7 @@ module Homebrew
         args.named.to_formulae.each do |formula|
           CPAN.update_perl_resources! formula,
                                       print_only:    args.print_only?,
-                                      quiet:         args.quiet? || args.silent?,
+                                      quiet:         args.quiet?,
                                       verbose:       args.verbose?,
                                       ignore_errors: args.ignore_errors?
         end

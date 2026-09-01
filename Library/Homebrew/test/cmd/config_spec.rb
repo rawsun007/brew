@@ -21,17 +21,12 @@ RSpec.describe Homebrew::Cmd::Config do
       .and be_a_success
   end
 
-  it "prints HOMEBREW_CASK_OPTS_REQUIRE_SHA in env config output when set" do
-    Homebrew.raise_deprecation_exceptions = false
+  it "disables HOMEBREW_CASK_OPTS_REQUIRE_SHA" do
     ENV["HOMEBREW_USER_SET_VARS"] = "HOMEBREW_CASK_OPTS_REQUIRE_SHA"
     ENV["HOMEBREW_CASK_OPTS_REQUIRE_SHA"] = "1"
-    output = StringIO.new
 
-    SystemConfig.homebrew_env_config(output)
-
-    expect(output.string).to include("HOMEBREW_CASK_OPTS_REQUIRE_SHA: 1")
-  ensure
-    Homebrew.raise_deprecation_exceptions = true
+    expect { SystemConfig.homebrew_env_config(StringIO.new) }
+      .to raise_error(MethodDeprecatedError, /HOMEBREW_CASK_OPTS_REQUIRE_SHA.*disabled/)
   end
 
   it "prints only environment variables with non-default values" do
@@ -127,7 +122,7 @@ RSpec.describe Homebrew::Cmd::Config do
   it "does not print HOMEBREW_EVAL_ALL unless it is directly set" do
     output = StringIO.new
 
-    with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1", HOMEBREW_EVAL_ALL: nil) do
+    with_env(HOMEBREW_REQUIRE_TAP_TRUST: nil, HOMEBREW_EVAL_ALL: nil) do
       SystemConfig.homebrew_env_config(output)
     end
 

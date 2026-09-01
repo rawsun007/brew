@@ -166,7 +166,7 @@ module OS
     # @api public
     sig { params(version: T.nilable(MacOSVersion)).returns(T.nilable(::Pathname)) }
     def self.sdk_path_if_needed(version = nil)
-      odeprecated "MacOS.sdk_path_if_needed", "MacOS.sdk_path"
+      odisabled "MacOS.sdk_path_if_needed", "MacOS.sdk_path"
       sdk_path(version)
     end
 

@@ -16,23 +16,28 @@ RSpec.describe Homebrew::Cmd::Bundle do
     end
   end
 
-  it "maps bundle cleanup environment variables to install options", :aggregate_failures do
+  it "deprecates HOMEBREW_BUNDLE_INSTALL_CLEANUP" do
     with_env("HOMEBREW_BUNDLE_INSTALL_CLEANUP" => "1", "HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP" => nil) do
-      args = described_class.new(["--global"]).args
-      expect(args.cleanup?).to be(true)
-      expect(args.force_cleanup?).to be(false)
-    end
-
-    with_env("HOMEBREW_BUNDLE_INSTALL_CLEANUP" => nil, "HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP" => "1") do
-      args = described_class.new(["--global"]).args
-      expect(args.cleanup?).to be(false)
-      expect(args.force_cleanup?).to be(true)
+      expect { described_class.new(["--global"]) }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_INSTALL_CLEANUP.*`brew bundle cleanup`/)
     end
   end
 
-  it "rejects install-only options for exec" do
+  it "deprecates HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP" do
+    with_env("HOMEBREW_BUNDLE_INSTALL_CLEANUP" => nil, "HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP" => "1") do
+      expect { described_class.new(["--global"]) }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP.*cleanup --force/)
+    end
+  end
+
+  it "deprecates the jobs option" do
     expect { described_class.new(%w[exec --jobs=1 true]) }
-      .to raise_error(UsageError, /`exec` subcommand does not accept the `--jobs` flag/)
+      .to raise_error(MethodDeprecatedError, /`--jobs` flag.*deprecated/)
+  end
+
+  it "disables the cleanup option" do
+    expect { described_class.new(%w[install --cleanup]) }
+      .to raise_error(MethodDeprecatedError, /`--cleanup` switch.*disabled/)
   end
 
   it "treats upgrade as install --upgrade", :aggregate_failures do
@@ -82,7 +87,7 @@ RSpec.describe Homebrew::Cmd::Bundle do
 
     expect(subcommand_options.call("install")).not_to have_key("--ask")
     expect(subcommand_options.call("install")["--force-cleanup"])
-      .to include("`$HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP`")
+      .to eq("Perform cleanup after installing dependencies without asking.")
     expect(subcommand_options.call("list")["--vscode"]).to eq("List VSCode (and forks/variants) extensions.")
     expect(subcommand_options.call("dump")["--vscode"]).to eq("Dump VSCode (and forks/variants) extensions.")
     expect(subcommand_options.call("dump")["--no-mas"])

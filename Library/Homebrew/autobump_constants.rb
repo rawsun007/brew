@@ -6,9 +6,7 @@ NO_AUTOBUMP_REASONS_INTERNAL = T.let({
   latest_version: "`version` is set to `:latest`",
 }.freeze, T::Hash[Symbol, String])
 
-NO_AUTOBUMP_REASONS_DEPRECATED = T.let({
-  requires_manual_review: "a manual review of this package is required for inclusion in autobump",
-}.freeze, T::Hash[Symbol, String])
+NO_AUTOBUMP_REASONS_DEPRECATED = T.let({}.freeze, T::Hash[Symbol, String])
 
 # The valid symbols for passing to `no_autobump!` in a `Formula` or `Cask`.
 # @api public

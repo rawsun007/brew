@@ -109,7 +109,7 @@ module Homebrew
         arguments.concat UNBREWED_EXCLUDE_PATHS.flat_map { |d| %W[! -path #{d}] }
         arguments.push ")"
 
-        cd(HOMEBREW_PREFIX) { safe_system("find", *arguments) }
+        cd(HOMEBREW_PREFIX) { Homebrew.safe_system("find", *arguments) }
       end
     end
   end

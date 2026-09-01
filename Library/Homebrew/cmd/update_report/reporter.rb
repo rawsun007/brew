@@ -329,7 +329,7 @@ class Reporter
         next false unless oldname_rack.exist?
 
         if oldname_rack.subdirs.empty?
-          oldname_rack.rmdir_if_possible
+          Utils::Path.rmdir_if_possible(oldname_rack)
           next false
         end
 

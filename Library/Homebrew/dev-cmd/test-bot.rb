@@ -68,7 +68,7 @@ module Homebrew
         switch "--[no-]skip-recursive-dependents",
                description: "Only test the direct dependents (default: enabled).",
                replacement: "the default behaviour",
-               odeprecated: true
+               odisabled:   true
         switch "--skip-checksum-only-audit",
                description: "Don't audit checksum-only changes."
         switch "--skip-stable-version-audit",

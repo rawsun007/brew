@@ -75,9 +75,6 @@ class Homebrew::DevCmd::Audit::Args < Homebrew::CLI::Args
   def os; end
 
   sig { returns(T::Boolean) }
-  def signing?; end
-
-  sig { returns(T::Boolean) }
   def skip_style?; end
 
   sig { returns(T::Boolean) }

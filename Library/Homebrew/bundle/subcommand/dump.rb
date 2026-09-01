@@ -67,7 +67,7 @@ module Homebrew
                               "`$HOMEBREW_BUNDLE_NO_DESCRIBE` is set.",
                  env:         :bundle_describe,
                  replacement: "the default behaviour",
-                 odeprecated: true
+                 odisabled:   true
           conflicts "--describe", "--no-describe"
           switch "--no-restart",
                  description: "Do not add `restart_service` to formula lines."
@@ -79,7 +79,7 @@ module Homebrew
           Homebrew::Bundle::Dumper.dump_brewfile(
             global:          context.global,
             file:            context.file,
-            describe:        args.describe? && !args.no_describe?,
+            describe:        !args.no_describe?,
             force:           context.force,
             no_restart:      args.no_restart?,
             taps:            core_type_options.fetch(:taps),

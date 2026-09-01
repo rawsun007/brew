@@ -184,7 +184,8 @@ module Homebrew
                   #{"sudo " unless System.root?}#{bin} stop #{service.name}
               EOS
             elsif System.launchctl? &&
-                  quiet_system(System.launchctl, "bootout", "#{System.domain_target}/#{service.service_name}")
+                  Homebrew.quiet_system(System.launchctl, "bootout",
+                                        "#{System.domain_target}/#{service.service_name}")
               ohai "Successfully stopped `#{service.name}` (label: #{service.service_name})"
             else
               opoo "Service `#{service.name}` is not started."
@@ -218,7 +219,7 @@ module Homebrew
             System.candidate_domain_targets.each do |domain_target|
               break unless service.loaded?
 
-              quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
+              Homebrew.quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
               unless no_wait
                 time_slept = 0
                 sleep_time = 1
@@ -229,12 +230,15 @@ module Homebrew
                       (max_wait.zero? || time_slept < max_wait)
                   sleep(sleep_time)
                   time_slept += sleep_time
-                  quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
+                  Homebrew.quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
                   exit_status = $CHILD_STATUS.exitstatus
                 end
               end
               service.reset_cache!
-              quiet_system System.launchctl, "stop", "#{domain_target}/#{service.service_name}" if service.pid?
+              if service.pid?
+                Homebrew.quiet_system System.launchctl, "stop",
+                                      "#{domain_target}/#{service.service_name}"
+              end
             end
           end
 
@@ -269,7 +273,7 @@ module Homebrew
               System.candidate_domain_targets.each do |domain_target|
                 break unless service.pid?
 
-                quiet_system System.launchctl, "stop", "#{domain_target}/#{service.service_name}"
+                Homebrew.quiet_system System.launchctl, "stop", "#{domain_target}/#{service.service_name}"
                 service.reset_cache!
               end
             end
@@ -359,8 +363,8 @@ module Homebrew
         ).void
       }
       def self.launchctl_load(service, file:, enable:)
-        safe_system System.launchctl, "enable", "#{System.domain_target}/#{service.service_name}" if enable
-        safe_system System.launchctl, "bootstrap", System.domain_target, file
+        Homebrew.safe_system System.launchctl, "enable", "#{System.domain_target}/#{service.service_name}" if enable
+        Homebrew.safe_system System.launchctl, "bootstrap", System.domain_target, file
       end
 
       sig { params(service: Services::FormulaWrapper, enable: T::Boolean).void }

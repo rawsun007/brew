@@ -21,6 +21,53 @@ module Utils
       raise message
     end
 
+    sig { params(path: Pathname).returns(T::Boolean) }
+    def self.rmdir_if_possible(path)
+      path.rmdir
+      true
+    rescue Errno::ENOTEMPTY
+      if (ds_store = path/".DS_Store").exist? && path.children.one?
+        ds_store.unlink
+        retry
+      else
+        false
+      end
+    rescue Errno::EACCES, Errno::ENOENT, Errno::EBUSY, Errno::EPERM
+      false
+    end
+
+    sig { params(path: Pathname).returns(T::Boolean) }
+    def self.text_executable?(path)
+      /\A#!\s*\S+/.match?(path.open("r") { |file| file.read(1024) })
+    end
+
+    sig { params(path: Pathname).returns(Pathname) }
+    def self.resolved_path(path)
+      path.symlink? ? path.dirname.join(path.readlink) : path
+    end
+
+    sig { params(path: Pathname).returns(T::Boolean) }
+    def self.resolved_path_exists?(path)
+      link = path.readlink
+    rescue ArgumentError
+      false
+    else
+      path.dirname.join(link).exist?
+    end
+
+    sig { params(path: T.any(Pathname, String), _block: T.proc.void).void }
+    def self.ensure_writable(path, &_block)
+      path = Pathname(path)
+      saved_perms = nil
+      unless path.writable?
+        saved_perms = path.stat.mode
+        FileUtils.chmod "u+rw", path.to_path
+      end
+      yield
+    ensure
+      path.chmod saved_perms if saved_perms
+    end
+
     # The stable install path for a given formula name.
     #
     # @api public

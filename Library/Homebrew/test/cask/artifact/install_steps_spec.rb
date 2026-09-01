@@ -494,6 +494,8 @@ RSpec.describe Cask::Artifact::AbstractInstallSteps, :cask do
   end
 
   it "runs a flight block after matching steps during migration" do
+    ENV["HOMEBREW_DEVELOPER"] = nil
+    Homebrew.raise_deprecation_exceptions = false
     cask = Cask::Cask.new("with-install-steps-bridge") do
       version "1.2.3"
       sha256 :no_check

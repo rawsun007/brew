@@ -22,10 +22,7 @@ module Debrew
       Debrew.debrew { super }
     end
 
-    sig {
-      # TODO: replace `returns(BasicObject)` with `void` after dropping `return false` handling in test
-      returns(BasicObject)
-    }
+    sig { void }
     def test
       Debrew.debrew { super }
     end
@@ -143,7 +140,7 @@ module Debrew
 
           menu.choice(:shell) do
             puts "When you exit this shell, you will return to the menu."
-            interactive_shell
+            Homebrew.interactive_shell
           end
         end
       end

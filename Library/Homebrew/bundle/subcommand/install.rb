@@ -35,15 +35,16 @@ module Homebrew
           flag   "--upgrade-formulae=", "--upgrade-formula=",
                  description: "Run `brew upgrade` on any of these comma-separated formulae, " \
                               "even if `$HOMEBREW_BUNDLE_NO_UPGRADE` is set."
-          # odeprecated
-          flag "--jobs=", hidden: true
+          flag "--jobs=",
+               replacement: "the default behaviour",
+               odeprecated: true
           switch "-f", "--force",
                  description: "Run with `--force`/`--overwrite`."
           switch "--cleanup",
                  description: "Ask to perform cleanup after installing dependencies. Requires `--force`, " \
                               "`--force-cleanup` or `$HOMEBREW_ASK`.",
                  env:         [:bundle_install_cleanup, "--global"],
-                 odeprecated: true
+                 odisabled:   true
           switch "--force-cleanup",
                  description: "Perform cleanup after installing dependencies without asking.",
                  env:         [:bundle_force_install_cleanup, "--global"]
@@ -54,13 +55,18 @@ module Homebrew
 
         sig { override.void }
         def run
-          if args.zap? && !args.cleanup? && !args.force_cleanup?
-            raise UsageError, "`--zap` cannot be passed without `--cleanup` or `--force-cleanup`."
-          end
+          cleanup_requested = false
+          if cleanup
+            cleanup_requested = args.force_cleanup? || Homebrew::EnvConfig.bundle_install_cleanup?
+            if args.zap? && !cleanup_requested
+              raise UsageError,
+                    "`--zap` cannot be passed without `--force-cleanup` or `$HOMEBREW_BUNDLE_INSTALL_CLEANUP`."
+            end
 
-          if args.cleanup? && !context.force && !args.force_cleanup? && !context.ask
-            raise UsageError, "`brew bundle install --cleanup` requires `--force`, `--force-cleanup` " \
-                              "or `$HOMEBREW_ASK`."
+            if cleanup_requested && !context.force && !args.force_cleanup? && !context.ask
+              raise UsageError, "`brew bundle install` cleanup requires `--force`, `--force-cleanup` " \
+                                "or `$HOMEBREW_ASK`."
+            end
           end
 
           if args.jobs.present?
@@ -87,7 +93,6 @@ module Homebrew
 
           return unless cleanup
 
-          cleanup_requested = args.force_cleanup? || args.cleanup?
           return unless cleanup_requested
 
           require "bundle/subcommand/cleanup"

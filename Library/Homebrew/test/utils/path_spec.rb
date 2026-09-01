@@ -42,6 +42,78 @@ RSpec.describe Utils::Path do
     end
   end
 
+  describe "::rmdir_if_possible" do
+    it "removes an empty directory" do
+      dir = mktmpdir
+
+      expect(described_class.rmdir_if_possible(dir)).to be(true)
+      expect(dir).not_to exist
+    end
+
+    it "does not remove a directory containing files" do
+      dir = mktmpdir
+      (dir/"file").write("content")
+
+      expect(described_class.rmdir_if_possible(dir)).to be(false)
+      expect(dir).to be_a_directory
+    end
+
+    it "ignores a .DS_Store file" do
+      dir = mktmpdir
+      (dir/".DS_Store").write("")
+
+      expect(described_class.rmdir_if_possible(dir)).to be(true)
+      expect(dir).not_to exist
+    end
+  end
+
+  describe "::text_executable?" do
+    it "detects a shebang" do
+      file = mktmpdir/"script"
+      file.write("#!/bin/sh\necho Homebrew\n")
+
+      expect(described_class.text_executable?(file)).to be(true)
+    end
+  end
+
+  describe "::resolved_path" do
+    it "returns a symlink target" do
+      dir = mktmpdir
+      target = dir/"target"
+      target.write("")
+      link = dir/"link"
+      FileUtils.ln_s(target.basename, link)
+
+      expect(described_class.resolved_path(link)).to eq(target)
+    end
+  end
+
+  describe "::resolved_path_exists?" do
+    it "returns whether a symlink target exists" do
+      dir = mktmpdir
+      target = dir/"target"
+      link = dir/"link"
+      FileUtils.ln_s(target.basename, link)
+
+      expect(described_class.resolved_path_exists?(link)).to be(false)
+      target.write("")
+      expect(described_class.resolved_path_exists?(link)).to be(true)
+    end
+  end
+
+  describe "::ensure_writable" do
+    it "makes a file writable and restores its permissions" do
+      skip "User is root so everything is writable." if Process.euid.zero?
+
+      file = mktmpdir/"file"
+      file.write("")
+      file.chmod(0555)
+
+      described_class.ensure_writable(file) { expect(file).to be_writable }
+      expect(file).not_to be_writable
+    end
+  end
+
   describe "::formula_opt_prefix" do
     it "returns a formula opt prefix without loading a Formula object" do
       expect(described_class.formula_opt_prefix("foo")).to eq(HOMEBREW_PREFIX/"opt/foo")

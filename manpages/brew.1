@@ -231,7 +231,7 @@ Run \fBbrew upgrade\fP on any of these comma\-separated formulae, even if \fB$HO
 Run with \fB\-\-force\fP/\fB\-\-overwrite\fP\&\.
 .TP
 \fB\-\-force\-cleanup\fP
-Perform cleanup after installing dependencies without asking\. Enabled by default if \fB$HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP\fP is set and \fB\-\-global\fP is passed\.
+Perform cleanup after installing dependencies without asking\.
 .TP
 \fB\-\-zap\fP
 Use \fBzap\fP instead of \fBuninstall\fP when cleaning up casks after installing dependencies\.
@@ -2915,9 +2915,6 @@ If set, \fBbrew bundle dump\fP will not dump VSCode (and forks/variants) extensi
 \fBHOMEBREW_BUNDLE_DUMP_NO_WINGET\fP
 If set, \fBbrew bundle dump\fP will not dump WinGet packages\.
 .TP
-\fBHOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP\fP
-If set, run \fBbrew bundle cleanup \-\-force\fP after \fBbrew bundle install\fP\&\.
-.TP
 \fBHOMEBREW_BUNDLE_NO_DESCRIBE\fP
 If set, do not enable bundle description comments from \fB$HOMEBREW_BUNDLE_DESCRIBE\fP or the default\. This does not disable an explicit \fB\-\-describe\fP\&\.
 .TP
@@ -3238,12 +3235,6 @@ If set, \fBbrew info\fP and \fBbrew install\fP will not warn when a formula\[u20
 \fBHOMEBREW_NO_RELOCATE_BUILD_PREFIX\fP
 If set, do not relocate bottles built for a different prefix at install time\. Homebrew will build from source instead\.
 .TP
-\fBHOMEBREW_NO_REQUIRE_TAP_TRUST\fP
-If set, do not require non\-official tap formulae, casks or commands to be trusted\. This is not recommended and will be removed in a later release\. Also enables commands that evaluate all formulae and casks\.
-.TP
-\fBHOMEBREW_NO_SANDBOX_LINUX\fP
-If set, disable the Linux sandbox\.
-.TP
 \fBHOMEBREW_NO_UPDATE_REPORT_NEW\fP
 If set, \fBbrew update\fP will not show the list of newly added formulae/casks\.
 .TP
@@ -3261,13 +3252,6 @@ If set, \fBbrew install\fP \fIformula\fP will use this URL to download PyPI pack
 .RS
 .P
 \fIDefault:\fP \fBhttps://pypi\.org/simple\fP\&\.
-.RE
-.TP
-\fBHOMEBREW_REQUIRE_TAP_TRUST\fP
-If set, require non\-official tap formulae, casks and commands to be trusted with \fBbrew trust\fP before Homebrew loads them\. This is the default unless \fB$HOMEBREW_NO_REQUIRE_TAP_TRUST\fP is set\. Also enables commands that evaluate all formulae and casks\.
-.RS
-.P
-\fIDefault:\fP \fBtrue\fP\&\.
 .RE
 .TP
 \fBHOMEBREW_SIMULATE_MACOS_ON_LINUX\fP

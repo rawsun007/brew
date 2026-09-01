@@ -13,7 +13,7 @@ module Cask
 
       sig { params(options: T.anything).void }
       def initialize(**options)
-        options.assert_valid_keys(*VALID_KEYS)
+        Homebrew.assert_valid_keys(options, *VALID_KEYS)
 
         conflicts = options.transform_values { |v| Set.new(Kernel.Array(v)) }
         conflicts.default = Set.new

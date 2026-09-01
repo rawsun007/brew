@@ -40,7 +40,7 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
     let(:installed_formula_names) { [versioned_name] }
 
     it "skips installation" do
-      expect(version_install).not_to receive(:safe_system)
+      expect(Homebrew).not_to receive(:safe_system)
 
       version_install.run
     end
@@ -63,7 +63,7 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
     end
 
     it "installs from the existing tap extraction" do
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "install", install_target).once
 
       version_install.run
@@ -83,7 +83,7 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
     end
 
     it "installs a versioned formula that already exists" do
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "install", install_target).once
 
       version_install.run
@@ -103,7 +103,7 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
     end
 
     it "installs the current formula" do
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "install", install_target).once
 
       version_install.run
@@ -113,7 +113,7 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
       let(:installed_formula_names) { [formula] }
 
       it "skips installation" do
-        expect(version_install).not_to receive(:safe_system)
+        expect(Homebrew).not_to receive(:safe_system)
 
         version_install.run
       end
@@ -131,11 +131,11 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
     end
 
     it "extracts into a new tap when needed" do
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "tap-new", "--no-git", tap_name).ordered
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "extract", formula, tap_name, "--version=#{version}").ordered
-      expect(version_install).to receive(:safe_system)
+      expect(Homebrew).to receive(:safe_system)
         .with(HOMEBREW_BREW_FILE, "install", "#{tap_name}/#{versioned_name}").ordered
 
       version_install.run
@@ -145,9 +145,9 @@ RSpec.describe Homebrew::Cmd::VersionInstall do
       let(:tap_installed) { true }
 
       it "skips tap creation" do
-        expect(version_install).to receive(:safe_system)
+        expect(Homebrew).to receive(:safe_system)
           .with(HOMEBREW_BREW_FILE, "extract", formula, tap_name, "--version=#{version}").ordered
-        expect(version_install).to receive(:safe_system)
+        expect(Homebrew).to receive(:safe_system)
           .with(HOMEBREW_BREW_FILE, "install", "#{tap_name}/#{versioned_name}").ordered
 
         version_install.run

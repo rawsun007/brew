@@ -25,7 +25,8 @@ module Homebrew
         switch "--eval-all",
                description: "Evaluate all available formulae and casks, whether installed or not, to check them.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--installed",
                description: "Check formulae and casks that are currently installed."
         switch "--newer-only",
@@ -57,9 +58,6 @@ module Homebrew
       def run
         Homebrew.install_bundler_gems!(groups: ["livecheck"])
 
-        eval_all = args.eval_all?
-        eval_all ||= args.no_named? && Homebrew::EnvConfig.tap_trust_configured?
-
         if args.debug? && args.verbose?
           puts args
           puts Homebrew::EnvConfig.livecheck_watchlist if Homebrew::EnvConfig.livecheck_watchlist.present?
@@ -78,10 +76,6 @@ module Homebrew
               formulae + casks
             elsif args.named.present?
               args.named.to_formulae_and_casks_with_taps
-            elsif eval_all
-              formulae = args.cask? ? [] : Formula.all(eval_all:)
-              casks = args.formula? ? [] : Cask::Cask.all(eval_all:)
-              formulae + casks
             elsif File.exist?(watchlist_path)
               begin
                 # This removes blank lines, comment lines, and trailing comments
@@ -100,9 +94,9 @@ module Homebrew
                 onoe e
               end
             else
-              raise UsageError,
-                    "`brew livecheck` with no arguments needs a watchlist file, " \
-                    "`HOMEBREW_REQUIRE_TAP_TRUST=1` or `HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
+              formulae = args.cask? ? [] : Formula.all
+              casks = args.formula? ? [] : Cask::Cask.all
+              formulae + casks
             end
           end,
           T::Array[T.any(Formula, Cask::Cask)],

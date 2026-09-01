@@ -16,7 +16,7 @@ module Homebrew
                description: "Use Pry instead of IRB.",
                env:         :pry,
                replacement: "the default IRB backend (Pry is largely unmaintained upstream)",
-               odeprecated: true
+               odisabled:   true
       end
 
       # work around IRB modifying ARGV.

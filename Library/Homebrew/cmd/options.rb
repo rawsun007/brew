@@ -20,10 +20,11 @@ module Homebrew
                description: "Evaluate all available formulae and casks, whether installed or not, to show their " \
                             "options.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         flag   "--command=",
                description: "Show options for the specified <command>.",
-               odeprecated: true
+               odisabled:   true
 
         conflicts "--command", "--installed", "--eval-all"
 
@@ -32,27 +33,10 @@ module Homebrew
 
       sig { override.void }
       def run
-        eval_all = args.eval_all?
-        eval_all ||= args.no_named? && Homebrew::EnvConfig.tap_trust_configured?
-
-        if eval_all
-          puts_options(Formula.all(eval_all:).sort)
+        if args.no_named?
+          puts_options(Formula.all.sort)
         elsif args.installed?
           puts_options(Formula.installed.sort)
-        elsif args.command.present?
-          cmd_options = Commands.command_options(T.must(args.command))
-          odie "Unknown command: brew #{args.command}" if cmd_options.nil?
-
-          if args.compact?
-            puts cmd_options.sort.map(&:first) * " "
-          else
-            cmd_options.sort.each { |option, desc| puts "#{option}\n\t#{desc}" }
-            puts
-          end
-        elsif args.no_named?
-          raise UsageError,
-                "`brew options` needs a formula, `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-                "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` set!"
         else
           puts_options args.named.to_formulae
         end

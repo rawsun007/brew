@@ -72,7 +72,7 @@ module Homebrew
       #       to prevent a cycle during bootstrapping. This can eventually be resolved
       #       by vendoring a pure-Ruby Sigstore verifier client.
       @gh_executable = with_env(HOMEBREW_NO_VERIFY_ATTESTATIONS: "1") do
-        ensure_executable!("gh", reason: "verifying attestations", latest: true)
+        Homebrew.ensure_executable!("gh", reason: "verifying attestations", latest: true)
       end
     end
 

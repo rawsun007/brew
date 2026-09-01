@@ -40,8 +40,11 @@ module Homebrew
           "This command does not take named arguments."
         else
           types << :named if types.empty?
-          arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                           .to_sentence two_words_connector: " or ", last_word_connector: " or "
+          arg_types = Homebrew.to_sentence(
+            types.map { |type| type.to_s.tr("_", " ") },
+            two_words_connector: " or ",
+            last_word_connector: " or ",
+          )
 
           "This command does not take more than #{maximum} #{arg_types} #{Utils.pluralize("argument", maximum)}."
         end
@@ -52,8 +55,11 @@ module Homebrew
       sig { params(minimum: Integer, types: T::Array[Symbol]).void }
       def initialize(minimum, types: [])
         types << :named if types.empty?
-        arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                         .to_sentence two_words_connector: " or ", last_word_connector: " or "
+        arg_types = Homebrew.to_sentence(
+          types.map { |type| type.to_s.tr("_", " ") },
+          two_words_connector: " or ",
+          last_word_connector: " or ",
+        )
 
         super "This command requires at least #{minimum} #{arg_types} #{Utils.pluralize("argument", minimum)}."
       end
@@ -63,8 +69,11 @@ module Homebrew
       sig { params(minimum: Integer, types: T::Array[Symbol]).void }
       def initialize(minimum, types: [])
         types << :named if types.empty?
-        arg_types = types.map { |type| type.to_s.tr("_", " ") }
-                         .to_sentence two_words_connector: " or ", last_word_connector: " or "
+        arg_types = Homebrew.to_sentence(
+          types.map { |type| type.to_s.tr("_", " ") },
+          two_words_connector: " or ",
+          last_word_connector: " or ",
+        )
 
         super "This command requires exactly #{minimum} #{arg_types} #{Utils.pluralize("argument", minimum)}."
       end

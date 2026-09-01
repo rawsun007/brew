@@ -12,7 +12,7 @@ module Utils
       if launchctl?
         Homebrew::Services::System.launchctl_service_running?(formula.plist_name)
       elsif systemctl?
-        quiet_system(systemctl, "is-active", "--quiet", formula.service_name)
+        Homebrew.quiet_system(systemctl, "is-active", "--quiet", formula.service_name)
       else
         false
       end

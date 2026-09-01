@@ -90,10 +90,8 @@ If you trust only a specific formula, cask or command, Homebrew may load that it
 ## Environment variables
 
 Tap trust is required by default.
-The default trust configuration also enables commands that evaluate all formulae or casks.
-`HOMEBREW_REQUIRE_TAP_TRUST=1` explicitly retains that behaviour.
+Commands that evaluate all formulae or casks load only official or explicitly trusted entries.
 
-`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` disables the default trust requirement.
-Disabling tap trust allows Homebrew to load code from every tapped repository and is not recommended.
-Commands that evaluate all formulae or casks remain enabled when this opt-out is set.
-This temporary opt-out will be removed in a later release.
+`HOMEBREW_REQUIRE_TAP_TRUST=1` is deprecated because it only requests the default behaviour and should be unset.
+`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` is also deprecated and will be removed in a later release.
+Instead of disabling tap trust, use `brew trust` to trust only the tap, formula, cask or command you need.

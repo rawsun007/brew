@@ -500,7 +500,7 @@ module Homebrew
         if args.no_browse?
           puts url
         else
-          exec_browser url
+          Homebrew.exec_browser url
         end
       end
 

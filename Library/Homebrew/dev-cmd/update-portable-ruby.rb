@@ -39,12 +39,12 @@ module Homebrew
           path.atomic_write("ruby_TAG=#{tag_symbol}\nruby_SHA=#{checksum.fetch("digest")}\n")
         end
 
-        safe_system HOMEBREW_BREW_FILE, "vendor-install", "ruby"
+        Homebrew.safe_system_brew "vendor-install", "ruby"
 
         bundler_version = Utils::PortableRuby.sync_bundler_version!(pkg_version)
-        safe_system HOMEBREW_BREW_FILE, "vendor-gems", "--no-commit",
-                    "--update=--ruby,--bundler=#{bundler_version}"
-        safe_system HOMEBREW_BREW_FILE, "typecheck", "--update"
+        Homebrew.safe_system_brew "vendor-gems", "--no-commit",
+                                  "--update=--ruby,--bundler=#{bundler_version}"
+        Homebrew.safe_system_brew "typecheck", "--update"
       end
     end
   end

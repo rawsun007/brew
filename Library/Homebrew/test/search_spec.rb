@@ -202,18 +202,16 @@ RSpec.describe Homebrew::Search do
           .to output(/testball: Some test/).to_stdout
       end
 
-      it "searches all trusted descriptions with tap trust enabled" do
+      it "searches all trusted descriptions" do
         cache_store = instance_double(DescriptionCacheStore)
         allow(DescriptionCacheStore).to receive(:new).and_return(cache_store)
         allow(CacheStoreDatabase).to receive(:use).with(:descriptions).and_yield(instance_double(CacheStoreDatabase))
         expect(Descriptions).to receive(:search)
-          .with("some", Descriptions::SearchField::Description, cache_store, eval_all: true)
+          .with("some", Descriptions::SearchField::Description, cache_store)
           .and_return(instance_double(Descriptions, print: nil))
 
-        with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-          args = Homebrew::Cmd::Desc.new(["--formula", "min_arg_placeholder"]).args
-          described_class.search_descriptions("some", args)
-        end
+        args = Homebrew::Cmd::Desc.new(["--formula", "min_arg_placeholder"]).args
+        described_class.search_descriptions("some", args)
       end
 
       it "searches cask descriptions", :needs_macos do

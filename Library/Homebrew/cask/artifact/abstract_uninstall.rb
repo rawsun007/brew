@@ -46,7 +46,7 @@ module Cask
 
       sig { params(cask: Cask, directives: DirectivesType).void }
       def initialize(cask, **directives)
-        directives.assert_valid_keys(*ORDERED_DIRECTIVES, *METADATA_KEYS)
+        Homebrew.assert_valid_keys(directives, *ORDERED_DIRECTIVES, *METADATA_KEYS)
 
         super
         directives[:signal] = Array(directives[:signal]).flatten.each_slice(2).to_a

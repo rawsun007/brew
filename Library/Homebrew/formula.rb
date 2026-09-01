@@ -273,7 +273,7 @@ class Formula
 
     @name = name
     @unresolved_path = path
-    @path = T.let(path.resolved_path, Pathname)
+    @path = T.let(Utils::Path.resolved_path(path), Pathname)
     @alias_path = alias_path
     @alias_name = T.let((File.basename(alias_path) if alias_path), T.nilable(String))
     @revision = T.let(self.class.revision || 0, Integer)
@@ -368,7 +368,7 @@ class Formula
         $stderr
       end
       # Call this method itself with redirected stdout
-      redirect_stdout(file) do
+      Homebrew.redirect_stdout(file) do
         return ensure_installed!(latest:, reason:, output_to_stderr: false, executable:, version_args:)
       end
     end
@@ -385,15 +385,15 @@ class Formula
 
     unless any_version_installed?
       ohai "Installing `#{name}`#{reason}..."
-      safe_system HOMEBREW_BREW_FILE, "install", "--formula", full_name
+      Homebrew.safe_system_brew "install", "--formula", full_name
     end
 
     if latest && !latest_version_installed?
       ohai "Upgrading `#{name}`#{reason}..."
-      safe_system HOMEBREW_BREW_FILE, "upgrade", "--formula", full_name
+      Homebrew.safe_system_brew "upgrade", "--formula", full_name
     elsif missing_dependencies.present?
       ohai "Reinstalling `#{name}`#{reason}..."
-      safe_system HOMEBREW_BREW_FILE, "reinstall", "--formula", full_name
+      Homebrew.safe_system_brew "reinstall", "--formula", full_name
     end
 
     executable ? opt_bin/executable : self
@@ -757,7 +757,8 @@ class Formula
       "linked"
     end
 
-    "#{reason_formulae.map(&:full_name).to_sentence} #{reason_formulae.one? ? "is" : "are"} already #{status}"
+    "#{Homebrew.to_sentence(reason_formulae.map(&:full_name))} " \
+      "#{reason_formulae.one? ? "is" : "are"} already #{status}"
   end
 
   sig { returns(T::Array[String]) }
@@ -1606,7 +1607,6 @@ class Formula
     method(:fetch).owner != Formula
   end
 
-  # odeprecated
   sig { overridable.void }
   def post_install; end
 
@@ -1681,7 +1681,8 @@ class Formula
           with_logging("post_install") do
             run_post_install_steps if post_install_steps_defined?
             if post_install_defined?
-              # odeprecated "`post_install`", "`post_install_steps`"
+              # When removing this, remove `Formula#post_install` too.
+              odeprecated "`post_install`", "`post_install_steps`"
               post_install
             end
           end
@@ -1938,7 +1939,7 @@ class Formula
 
     oldnames.each do |oldname|
       next unless (oldname_rack = HOMEBREW_CELLAR/oldname).exist?
-      next if oldname_rack.resolved_path != rack
+      next if Utils::Path.resolved_path(oldname_rack) != rack
 
       oldname_lock = FormulaLock.new(oldname)
       oldname_lock.lock
@@ -2425,7 +2426,7 @@ class Formula
   sig { params(file: MachOShim, arch: T.nilable(Symbol)).void }
   def extract_macho_slice_from(file, arch = Hardware::CPU.arch)
     odebug "Extracting #{arch} slice from #{file}"
-    file.ensure_writable do
+    Utils::Path.ensure_writable(file.to_path) do
       macho = MachO::FatFile.new(file)
       native_slice = macho.extract(Hardware::CPU.arch)
       native_slice.write file
@@ -2642,16 +2643,9 @@ class Formula
     @full_names ||= T.let(core_names + tap_names, T.nilable(T::Array[String]))
   end
 
-  # An array of each known {Formula}.
-  # Can only be used when users set `HOMEBREW_REQUIRE_TAP_TRUST=1` or `HOMEBREW_NO_REQUIRE_TAP_TRUST=1`.
-  sig { params(eval_all: T::Boolean).returns(T::Array[Formula]) }
-  def self.all(eval_all: false)
-    if !eval_all && !Homebrew::EnvConfig.tap_trust_configured?
-      raise ArgumentError,
-            "Formula#all cannot be used without `HOMEBREW_REQUIRE_TAP_TRUST=1` or " \
-            "`HOMEBREW_NO_REQUIRE_TAP_TRUST=1`"
-    end
-
+  # An array of each known trusted {Formula}.
+  sig { returns(T::Array[Formula]) }
+  def self.all
     trusted_tap_files = Homebrew::Trust.trusted_formula_files(tap_files)
 
     (core_names + trusted_tap_files).filter_map do |name_or_file|
@@ -3325,10 +3319,7 @@ class Formula
     self.class.on_system_blocks_exist? || @on_system_blocks_exist
   end
 
-  sig {
-    # TODO: replace `returns(BasicObject)` with `void` after dropping `return false` handling in test
-    params(keep_tmp: T::Boolean).returns(BasicObject)
-  }
+  sig { params(keep_tmp: T::Boolean).void }
   def run_test(keep_tmp: false)
     @prefix_returns_versioned_prefix = T.let(true, T.nilable(T::Boolean))
 
@@ -3381,10 +3372,7 @@ class Formula
   # test instructions. Called by `brew test`.
   #
   # @api public
-  sig {
-    # TODO: replace `returns(BasicObject)` with `void` after dropping `return false` handling in test
-    returns(BasicObject)
-  }
+  sig { void }
   def test; end
 
   # Returns the path to a fixture file for use in formula tests.
@@ -3691,7 +3679,7 @@ class Formula
         eligible_kegs.each do |keg|
           if keg.linked?
             opoo "Skipping (old) #{keg} due to it being linked" unless quiet
-          elsif pinned? && keg == Keg.new(@pin.path.resolved_path)
+          elsif pinned? && keg == Keg.new(Utils::Path.resolved_path(@pin.path))
             opoo "Skipping (old) #{keg} due to it being pinned" unless quiet
           elsif (keepme_refs = keg.keepme_refs.presence)
             opoo "Skipping #{keg} as it is needed by #{keepme_refs.join(", ")}" unless quiet
@@ -4886,10 +4874,7 @@ class Formula
     #
     # @see https://docs.brew.sh/Formula-Cookbook#add-a-test-to-the-formula Tests
     # @api public
-    sig {
-      # TODO: replace `returns(BasicObject)` with `void` after dropping `return false` handling in test
-      params(block: T.proc.returns(BasicObject)).returns(BasicObject)
-    }
+    sig { params(block: T.proc.returns(BasicObject)).void }
     def test(&block) = define_method(:test, &block)
 
     # {Livecheck} can be used to check for newer versions of the software.
@@ -4931,8 +4916,6 @@ class Formula
       if because.is_a?(Symbol) && !NO_AUTOBUMP_REASONS_LIST.key?(because)
         raise ArgumentError, "'because' argument should use valid symbol or a string!"
       end
-
-      odisabled "no_autobump! because: :requires_manual_review" if because == :requires_manual_review
 
       @no_autobump_defined = T.let(true, T.nilable(T::Boolean))
       @no_autobump_message = T.let(because, T.nilable(T.any(String, Symbol)))

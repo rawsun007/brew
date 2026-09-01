@@ -83,7 +83,7 @@ module Homebrew
           odie "Could not find end commit!" if end_commit.empty?
 
           if Utils.popen_read("git", "branch", "--list", "main").blank?
-            safe_system "git", "branch", "main", "origin/HEAD"
+            Homebrew.safe_system "git", "branch", "main", "origin/HEAD"
           end
         end
 
@@ -98,31 +98,31 @@ module Homebrew
 
           oh1 "Preparing test environment..."
           # copy Homebrew installation
-          safe_system "git", "clone", "#{HOMEBREW_REPOSITORY}/.git", ".",
-                      "--branch", "main", "--single-branch"
+          Homebrew.safe_system "git", "clone", "#{HOMEBREW_REPOSITORY}/.git", ".",
+                               "--branch", "main", "--single-branch"
 
           # set git origin to another copy
-          safe_system "git", "clone", "#{HOMEBREW_REPOSITORY}/.git", "remote.git",
-                      "--bare", "--branch", "main", "--single-branch"
-          safe_system "git", "config", "remote.origin.url", "#{curdir}/remote.git"
+          Homebrew.safe_system "git", "clone", "#{HOMEBREW_REPOSITORY}/.git", "remote.git",
+                               "--bare", "--branch", "main", "--single-branch"
+          Homebrew.safe_system "git", "config", "remote.origin.url", "#{curdir}/remote.git"
           ENV["HOMEBREW_BREW_GIT_REMOTE"] = "#{curdir}/remote.git"
 
           # force push origin to end_commit
-          safe_system "git", "checkout", "-B", "main", end_commit
-          safe_system "git", "push", "--force", "origin", "main"
+          Homebrew.safe_system "git", "checkout", "-B", "main", end_commit
+          Homebrew.safe_system "git", "push", "--force", "origin", "main"
 
           # set test copy to start_commit
-          safe_system "git", "reset", "--hard", start_commit
+          Homebrew.safe_system "git", "reset", "--hard", start_commit
 
           # update ENV["PATH"]
           ENV["PATH"] = PATH.new(ENV.fetch("PATH")).prepend(curdir/"bin").to_s
 
           # Run `brew help` to install `portable-ruby` (if needed).
-          quiet_system "brew", "help"
+          Homebrew.quiet_system "brew", "help"
 
           # run brew update
           oh1 "Running `brew update`..."
-          safe_system "brew", "update", "--verbose", "--debug"
+          Homebrew.safe_system "brew", "update", "--verbose", "--debug"
           actual_end_commit = Utils.popen_read("git", "rev-parse", branch).chomp
           if actual_end_commit != end_commit
             start_log = Utils.popen_read("git", "log", "-1", "--decorate", "--oneline", start_commit).chomp
@@ -147,7 +147,7 @@ module Homebrew
         tags = Utils.popen_read("git", "tag", "--list", "--sort=-version:refname")
         if tags.blank?
           tags = if (HOMEBREW_REPOSITORY/".git/shallow").exist?
-            safe_system "git", "fetch", "--tags", "--depth=1"
+            Homebrew.safe_system "git", "fetch", "--tags", "--depth=1"
             Utils.popen_read("git", "tag", "--list", "--sort=-version:refname")
           end
         end

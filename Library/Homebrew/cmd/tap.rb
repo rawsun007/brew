@@ -33,7 +33,8 @@ module Homebrew
                description: "Evaluate all available formulae, casks and aliases in the new tap to check their " \
                             "validity.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default tap verification behaviour",
+               odisabled:   true
         switch "-f", "--force",
                description: "Force install core taps even under API mode."
 
@@ -55,7 +56,7 @@ module Homebrew
             tap.install clone_target:  args.named.second,
                         custom_remote: args.custom_remote?,
                         quiet:         args.quiet?,
-                        verify:        args.eval_all?,
+                        verify:        true,
                         force:         args.force?
           rescue Tap::InvalidNameError, TapRemoteMismatchError, TapNoCustomRemoteError => e
             odie e

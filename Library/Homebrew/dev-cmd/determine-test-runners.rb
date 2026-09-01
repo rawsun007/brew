@@ -20,7 +20,8 @@ module Homebrew
                description: "Evaluate all available formulae, whether installed or not, to determine testing " \
                             "dependents.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--dependents",
                description: "Determine runners for testing dependents."
         flag   "--dependent-shards=",
@@ -43,11 +44,8 @@ module Homebrew
           raise UsageError, "`--all-supported` is mutually exclusive to other arguments."
         end
 
-        eval_all = args.eval_all?
-        eval_all ||= Homebrew::EnvConfig.tap_trust_configured?
-
         testing_formulae = args.named.first&.split(",").to_a.map do |name|
-          TestRunnerFormula.new(Formulary.factory(name), eval_all:)
+          TestRunnerFormula.new(Formulary.factory(name), include_uninstalled: true)
         end.freeze
         deleted_formulae = args.named.second&.split(",").to_a.freeze
         dependent_shards = args.dependent_shards || "1"

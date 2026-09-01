@@ -55,7 +55,7 @@ module Homebrew
                             "To view the history locally: `brew log -p` <formula> or <cask>"
         switch "--fetch-manifest",
                description: "Fetch GitHub Packages manifest for extra information when <formula> is not installed.",
-               odeprecated: true
+               odisabled:   true
         flag   "--json",
                description: "Print a JSON representation. Currently the default value for <version> is `v1`." \
                             "`v1` is valid for <formula> only. `v2` is valid for both <formula> and <cask>." \
@@ -68,7 +68,8 @@ module Homebrew
                description: "Evaluate all available formulae and casks, whether installed or not, to print their " \
                             "JSON.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--variations",
                depends_on:  "--json",
                description: "Include the variations hash in each formula's JSON output."
@@ -117,9 +118,7 @@ module Homebrew
 
           print_analytics
         elsif (json = args.json)
-          eval_all = args.eval_all?
-          eval_all ||= args.no_named? && !args.installed? && Homebrew::EnvConfig.tap_trust_configured?
-          print_json(json, eval_all)
+          print_json(json, args.no_named? && !args.installed?)
         elsif args.installed?
           T.let([
             *(args.cask? ? [] : Formula.installed.sort),
@@ -132,7 +131,7 @@ module Homebrew
         elsif args.github?
           raise FormulaOrCaskUnspecifiedError if args.no_named?
 
-          exec_browser(*args.named.to_formulae_and_casks.map do |formula_keg_or_cask|
+          Homebrew.exec_browser(*args.named.to_formulae_and_casks.map do |formula_keg_or_cask|
             formula_or_cask = T.cast(formula_keg_or_cask, T.any(Formula, Cask::Cask))
             github_info(formula_or_cask)
           end)
@@ -512,7 +511,7 @@ module Homebrew
           puts "Not installed"
           if (bottle = formula.bottle)
             begin
-              bottle.fetch_tab(quiet: !args.debug?) if args.fetch_manifest? || args.verbose?
+              bottle.fetch_tab(quiet: !args.debug?) if args.verbose?
               bottle_size = bottle.bottle_size
               installed_size = bottle.installed_size
               puts "Bottle Size: #{Formatter.disk_usage_readable(bottle_size)}" if bottle_size
@@ -725,9 +724,9 @@ module Homebrew
         version_hash[version]
       end
 
-      sig { params(json: T.any(T::Boolean, String), eval_all: T::Boolean).void }
-      def print_json(json, eval_all)
-        raise FormulaOrCaskUnspecifiedError if !(eval_all || args.installed?) && args.no_named?
+      sig { params(json: T.any(T::Boolean, String), all_packages: T::Boolean).void }
+      def print_json(json, all_packages)
+        raise FormulaOrCaskUnspecifiedError if !(all_packages || args.installed?) && args.no_named?
 
         qualified_inputs = args.named.select { |name| name.include?("/") }.to_set
 
@@ -735,8 +734,8 @@ module Homebrew
         when :v1, :default
           raise UsageError, "Cannot specify `--cask` when using `--json=v1`!" if args.cask?
 
-          formulae = if eval_all
-            Formula.all(eval_all:).sort
+          formulae = if all_packages
+            Formula.all.sort
           elsif args.installed?
             Formula.installed.sort
           else
@@ -750,11 +749,11 @@ module Homebrew
           end
         when :v2
           formulae, casks = T.let(
-            if eval_all
+            if all_packages
               formulae = [] if args.cask?
-              formulae ||= Formula.all(eval_all:).sort
+              formulae ||= Formula.all.sort
               casks = [] if args.formula?
-              casks ||= Cask::Cask.all(eval_all:).sort_by(&:full_name)
+              casks ||= Cask::Cask.all.sort_by(&:full_name)
               [formulae, casks]
             elsif args.installed?
               formulae = [] if args.cask?

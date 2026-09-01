@@ -242,9 +242,9 @@ RSpec.describe Homebrew::EnvConfig do
       expect(env_config.ask?).to be(false)
     end
 
-    it "deprecates HOMEBREW_ASK" do
+    it "disables HOMEBREW_ASK" do
       ENV["HOMEBREW_ASK"] = "1"
-      expect { env_config.ask? }.to raise_error(MethodDeprecatedError, /HOMEBREW_ASK.*deprecated/)
+      expect { env_config.ask? }.to raise_error(MethodDeprecatedError, /HOMEBREW_ASK.*disabled/)
     end
   end
 
@@ -287,10 +287,10 @@ RSpec.describe Homebrew::EnvConfig do
       end
     end
 
-    it "deprecates HOMEBREW_BUNDLE_DESCRIBE" do
+    it "disables HOMEBREW_BUNDLE_DESCRIBE" do
       with_env(HOMEBREW_BUNDLE_DESCRIBE: "1") do
         expect { env_config.bundle_describe? }
-          .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_DESCRIBE.*deprecated/)
+          .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_DESCRIBE.*disabled/)
       end
     end
   end
@@ -308,19 +308,19 @@ RSpec.describe Homebrew::EnvConfig do
       end
     end
 
-    it "deprecates HOMEBREW_BUNDLE_NO_SECRETS" do
+    it "disables HOMEBREW_BUNDLE_NO_SECRETS" do
       with_env(HOMEBREW_BUNDLE_NO_SECRETS: "1", HOMEBREW_BUNDLE_SECRETS: nil) do
         expect { env_config.bundle_no_secrets? }
-          .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_NO_SECRETS.*deprecated/)
+          .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_NO_SECRETS.*disabled/)
       end
     end
   end
 
   describe ".use_internal_api?" do
-    it "deprecates HOMEBREW_USE_INTERNAL_API" do
+    it "disables HOMEBREW_USE_INTERNAL_API" do
       with_env(HOMEBREW_USE_INTERNAL_API: "1") do
         expect { env_config.use_internal_api? }
-          .to raise_error(MethodDeprecatedError, /HOMEBREW_USE_INTERNAL_API.*deprecated/)
+          .to raise_error(MethodDeprecatedError, /HOMEBREW_USE_INTERNAL_API.*disabled/)
       end
     end
   end
@@ -403,9 +403,15 @@ RSpec.describe Homebrew::EnvConfig do
       expect(env_config.sandbox_linux?).to be(true)
     end
 
-    it "deprecates HOMEBREW_SANDBOX_LINUX" do
+    it "disables HOMEBREW_SANDBOX_LINUX" do
       ENV["HOMEBREW_SANDBOX_LINUX"] = "1"
-      expect { env_config.sandbox_linux? }.to raise_error(MethodDeprecatedError, /HOMEBREW_SANDBOX_LINUX.*deprecated/)
+      expect { env_config.sandbox_linux? }.to raise_error(MethodDeprecatedError, /HOMEBREW_SANDBOX_LINUX.*disabled/)
+    end
+
+    it "deprecates HOMEBREW_NO_SANDBOX_LINUX" do
+      ENV["HOMEBREW_NO_SANDBOX_LINUX"] = "1"
+      expect { env_config.sandbox_linux? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_SANDBOX_LINUX.*deprecated.*Landlock-enabled Linux kernel/)
     end
   end
 
@@ -429,10 +435,10 @@ RSpec.describe Homebrew::EnvConfig do
   end
 
   describe ".no_sandbox_cask?" do
-    it "deprecates HOMEBREW_NO_SANDBOX_CASK" do
+    it "disables HOMEBREW_NO_SANDBOX_CASK" do
       ENV["HOMEBREW_NO_SANDBOX_CASK"] = "1"
       expect { env_config.no_sandbox_cask? }
-        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_SANDBOX_CASK.*deprecated/)
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_SANDBOX_CASK.*disabled/)
     ensure
       ENV["HOMEBREW_NO_SANDBOX_CASK"] = nil
     end
@@ -448,6 +454,38 @@ RSpec.describe Homebrew::EnvConfig do
 
     it "returns true by default" do
       expect(env_config.require_tap_trust?).to be(true)
+    end
+
+    it "deprecates HOMEBREW_REQUIRE_TAP_TRUST" do
+      ENV["HOMEBREW_REQUIRE_TAP_TRUST"] = "1"
+      expect { env_config.require_tap_trust? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_REQUIRE_TAP_TRUST.*deprecated.*default behaviour/)
+    end
+
+    it "deprecates HOMEBREW_NO_REQUIRE_TAP_TRUST" do
+      ENV["HOMEBREW_NO_REQUIRE_TAP_TRUST"] = "1"
+      expect { env_config.require_tap_trust? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_REQUIRE_TAP_TRUST.*deprecated.*`brew trust`/)
+    end
+  end
+
+  describe ".bundle_install_cleanup?" do
+    it "deprecates HOMEBREW_BUNDLE_INSTALL_CLEANUP" do
+      ENV["HOMEBREW_BUNDLE_INSTALL_CLEANUP"] = "1"
+      expect { env_config.bundle_install_cleanup? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_INSTALL_CLEANUP.*deprecated.*`brew bundle cleanup`/)
+    ensure
+      ENV["HOMEBREW_BUNDLE_INSTALL_CLEANUP"] = nil
+    end
+  end
+
+  describe ".bundle_force_install_cleanup?" do
+    it "deprecates HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP" do
+      ENV["HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP"] = "1"
+      expect { env_config.bundle_force_install_cleanup? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP.*deprecated.*cleanup --force/)
+    ensure
+      ENV["HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP"] = nil
     end
   end
 
@@ -467,46 +505,22 @@ RSpec.describe Homebrew::EnvConfig do
   end
 
   describe ".eval_all?" do
-    before do
+    it "disables HOMEBREW_EVAL_ALL" do
+      ENV["HOMEBREW_EVAL_ALL"] = "1"
+      expect { env_config.eval_all? }
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_EVAL_ALL.*disabled.*default trusted-tap behaviour/)
+    ensure
       ENV["HOMEBREW_EVAL_ALL"] = nil
-      ENV["HOMEBREW_REQUIRE_TAP_TRUST"] = nil
-      ENV["HOMEBREW_NO_REQUIRE_TAP_TRUST"] = nil
-      ENV["HOMEBREW_DEVELOPER"] = nil
-    end
-
-    it "returns false if HOMEBREW_REQUIRE_TAP_TRUST is set" do
-      ENV["HOMEBREW_REQUIRE_TAP_TRUST"] = "1"
-
-      expect(env_config.eval_all?).to be(false)
     end
   end
 
   describe ".no_eval_env_scrubbing?" do
-    it "deprecates HOMEBREW_NO_EVAL_ENV_SCRUBBING" do
+    it "disables HOMEBREW_NO_EVAL_ENV_SCRUBBING" do
       ENV["HOMEBREW_NO_EVAL_ENV_SCRUBBING"] = "1"
       expect { env_config.no_eval_env_scrubbing? }
-        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_EVAL_ENV_SCRUBBING.*deprecated/)
+        .to raise_error(MethodDeprecatedError, /HOMEBREW_NO_EVAL_ENV_SCRUBBING.*disabled/)
     ensure
       ENV["HOMEBREW_NO_EVAL_ENV_SCRUBBING"] = nil
-    end
-  end
-
-  describe ".tap_trust_configured?" do
-    before do
-      ENV["HOMEBREW_REQUIRE_TAP_TRUST"] = nil
-      ENV["HOMEBREW_NO_REQUIRE_TAP_TRUST"] = nil
-    end
-
-    it "returns true by default" do
-      expect(env_config.tap_trust_configured?).to be(true)
-      expect(env_config.require_tap_trust?).to be(true)
-    end
-
-    it "returns true if HOMEBREW_REQUIRE_TAP_TRUST is set" do
-      ENV["HOMEBREW_REQUIRE_TAP_TRUST"] = "1"
-
-      expect(env_config.tap_trust_configured?).to be(true)
-      expect(env_config.require_tap_trust?).to be(true)
     end
   end
 end

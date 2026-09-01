@@ -144,7 +144,7 @@ RSpec.describe Formulary do
       RUBY
       full_name = "#{tap.name}/sensitive-env"
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1", HOMEBREW_USER_CONFIG_HOME: mktmpdir) do
+      with_env(HOMEBREW_USER_CONFIG_HOME: mktmpdir) do
         expect { described_class.factory(formula_path) }
           .to raise_error(Homebrew::UntrustedTapError, /#{tap.name}/)
 
@@ -923,7 +923,7 @@ RSpec.describe Formulary do
       RUBY
       rack_path.mkpath
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1", HOMEBREW_USER_CONFIG_HOME: mktmpdir) do
+      with_env(HOMEBREW_USER_CONFIG_HOME: mktmpdir) do
         expect(described_class.to_rack("#{tap.name}/#{formula_name}")).to eq(rack_path)
         expect(eval_marker).not_to exist
       end

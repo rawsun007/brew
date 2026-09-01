@@ -24,6 +24,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
         end
 
         def post_install; end
+        ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
       end
     RUBY
   end
@@ -39,7 +40,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
         end
 
         def post_install; end
-        ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae in official Homebrew taps must use `post_install_steps` instead of `post_install`.
+        ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
       end
     RUBY
   end
@@ -50,6 +51,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install; end
+        ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
 
         post_install_steps do
         ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: `post_install` and `post_install_steps` cannot both be used.
@@ -628,22 +630,24 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
   end
 
   it "does not autocorrect dynamic or unsupported database and link work" do
-    expect_no_offenses(<<~'RUBY')
+    expect_offense(<<~'RUBY')
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           return if ENV["HOMEBREW_GITHUB_ACTIONS"]
           system bin/"initdb", "--locale=#{ENV.fetch("LC_ALL")}", "-E", "UTF-8", postgresql_datadir
         end
       end
     RUBY
 
-    expect_no_offenses(<<~'RUBY')
+    expect_offense(<<~'RUBY')
       class PerconaServer < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           (var/"mysql").mkpath
           return if ENV["HOMEBREW_GITHUB_ACTIONS"]
 
@@ -660,11 +664,12 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
       end
     RUBY
 
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Mysql < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           (var/"mysql").mkpath
           return if ENV["HOMEBREW_GITHUB_ACTIONS"]
           system bin/"mysqld", "--initialize-insecure", "--skip-grant-tables"
@@ -672,11 +677,12 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
       end
     RUBY
 
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           lib.each_child { |child| dynamic_target.install_symlink child }
         end
       end
@@ -736,22 +742,24 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
   end
 
   it "does not autocorrect dynamic or unsupported certificate symlinks" do
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           rm(openssldir/"cert.pem") if (openssldir/"cert.pem").exist?
           openssldir.install_symlink Formula["ca-certificates"].pkgetc/"cert.pem"
         end
       end
     RUBY
 
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           rm(pkgetc/"cert.pem") if (pkgetc/"cert.pem").exist?
           pkgetc.install_symlink Formula["custom-ca"].pkgetc/"cert.pem"
         end
@@ -760,11 +768,12 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
   end
 
   it "does not autocorrect non-file preparation in `post_install`" do
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           system "true"
         end
       end
@@ -772,11 +781,12 @@ RSpec.describe RuboCop::Cop::FormulaAudit::InstallSteps do
   end
 
   it "does not autocorrect mixed `post_install` bodies" do
-    expect_no_offenses(<<~RUBY)
+    expect_offense(<<~RUBY)
       class Foo < Formula
         url "https://brew.sh/foo-1.0.tgz"
 
         def post_install
+        ^^^^^^^^^^^^^^^^ FormulaAudit/InstallSteps: Formulae must use `post_install_steps` instead of `post_install`.
           (var/"log/foo").mkpath
           system "true"
         end

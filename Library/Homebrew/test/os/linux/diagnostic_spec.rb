@@ -64,10 +64,9 @@ RSpec.describe Homebrew::Diagnostic::Checks do
 
   specify "#check_linux_sandbox returns nil when Linux sandboxing is disabled" do
     expect(Sandbox).not_to receive(:failure_reason)
+    allow(Homebrew::EnvConfig).to receive(:sandbox_linux?).and_return(false)
 
-    with_env(HOMEBREW_NO_SANDBOX_LINUX: "1") do
-      expect(checks.check_linux_sandbox&.to_s).to be_nil
-    end
+    expect(checks.check_linux_sandbox&.to_s).to be_nil
   end
 
   specify "#check_linux_sandbox returns nil when the Linux sandbox is available" do
@@ -101,9 +100,8 @@ RSpec.describe Homebrew::Diagnostic::Checks do
         .to include(
           "Landlock is not supported by this Linux kernel.",
           "Homebrew's Linux sandbox requires a kernel with Landlock enabled.",
-          "export HOMEBREW_NO_SANDBOX_LINUX=1",
+          "Upgrade to a Linux kernel with Landlock enabled.",
         )
-      expect(message).to end_with("  export HOMEBREW_NO_SANDBOX_LINUX=1")
     end
   end
 
@@ -120,7 +118,6 @@ RSpec.describe Homebrew::Diagnostic::Checks do
         .to include(
           "Landlock requires Ruby's bundled Fiddle library.",
           "Run Homebrew with its vendored Ruby, which includes Fiddle.",
-          "export HOMEBREW_NO_SANDBOX_LINUX=1",
         )
       expect(message).not_to include("kernel with Landlock")
     end

@@ -43,14 +43,15 @@ module Homebrew
         switch "--eval-all",
                description: "Evaluate all available formulae and casks, whether installed or not, to audit them.",
                env:         :eval_all,
-               odeprecated: true
+               replacement: "the default trusted-tap behaviour",
+               odisabled:   true
         switch "--new",
                description: "Run various additional style checks to determine if a new formula or cask is eligible " \
                             "for Homebrew. This should be used when creating new formulae or casks and implies " \
                             "`--strict` and `--online`."
         switch "--[no-]signing",
                description: "Audit for app signatures, which are required by macOS on ARM.",
-               odeprecated: true
+               odisabled:   true
         switch "--changed",
                description: "Check files that were changed from the `main` branch."
         flag   "--tap=",
@@ -156,19 +157,8 @@ module Homebrew
             no_named_args = true
             [Formula.installed, Cask::Caskroom.casks]
           elsif args.no_named?
-            eval_all = args.eval_all?
-            eval_all ||= Homebrew::EnvConfig.tap_trust_configured?
-
-            unless eval_all
-              # This odisabled should probably stick around indefinitely.
-              odisabled "`brew audit`",
-                        "set `HOMEBREW_REQUIRE_TAP_TRUST=1`"
-            end
             no_named_args = true
-            [
-              Formula.all(eval_all:),
-              Cask::Cask.all(eval_all:),
-            ]
+            [Formula.all, Cask::Cask.all]
           else
             if args.named.any? { |named_arg| named_arg.end_with?(".rb") }
               # This odisabled should probably stick around indefinitely,
@@ -286,9 +276,7 @@ module Homebrew
                 audit_online:   args.online? || nil,
                 audit_strict:   args.strict? || nil,
 
-                # No need for `|| nil` for `--[no-]signing`
-                # because boolean switches are already `nil` if not passed
-                audit_signing:  args.signing?,
+                audit_signing:  nil,
                 audit_new_cask: args.new? || nil,
                 audit_fix:      args.fix? || nil,
                 any_named_args: !no_named_args,
@@ -325,7 +313,7 @@ module Homebrew
           error_sources << Utils.pluralize("cask", cask_count, include_count: true) if cask_count.positive?
           error_sources << Utils.pluralize("tap", tap_count, include_count: true) if tap_count.positive?
 
-          errors_summary += " in #{error_sources.to_sentence}" if error_sources.any?
+          errors_summary += " in #{Homebrew.to_sentence(error_sources)}" if error_sources.any?
 
           errors_summary += " detected"
 

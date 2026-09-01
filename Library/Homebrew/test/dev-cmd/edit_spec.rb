@@ -46,7 +46,7 @@ RSpec.describe Homebrew::DevCmd::Edit do
       RUBY
     end
 
-    allow_any_instance_of(described_class).to receive(:exec_editor)
+    allow(Homebrew).to receive(:exec_editor)
 
     described_class.new(["testball"]).run
   end

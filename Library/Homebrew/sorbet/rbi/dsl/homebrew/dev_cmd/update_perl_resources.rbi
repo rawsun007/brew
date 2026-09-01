@@ -19,10 +19,4 @@ class Homebrew::DevCmd::UpdatePerlResources::Args < Homebrew::CLI::Args
 
   sig { returns(T::Boolean) }
   def print_only?; end
-
-  sig { returns(T::Boolean) }
-  def s?; end
-
-  sig { returns(T::Boolean) }
-  def silent?; end
 end

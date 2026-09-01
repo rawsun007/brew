@@ -27,11 +27,10 @@ class Descriptions
       cache_store:     T.any(DescriptionCacheStore, T::Hash[String, T.nilable(String)],
                              T::Hash[String, T::Array[T.nilable(String)]]),
       status_data:     T::Hash[String, T::Hash[Symbol, T::Boolean]],
-      eval_all:        T::Boolean,
     ).returns(T.attached_class)
   }
-  def self.search(string_or_regex, field, cache_store, status_data: {}, eval_all: Homebrew::EnvConfig.tap_trust_configured?)
-    cache_store.populate_if_empty!(eval_all:) if cache_store.is_a?(DescriptionCacheStore)
+  def self.search(string_or_regex, field, cache_store, status_data: {})
+    cache_store.populate_if_empty! if cache_store.is_a?(DescriptionCacheStore)
 
     results = case field
     when SearchField::Name

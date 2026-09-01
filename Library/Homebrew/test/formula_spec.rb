@@ -413,9 +413,9 @@ RSpec.describe Formula do
 
     after do
       FileUtils.rm_f conflict_file
-      conflict_file.dirname.rmdir_if_possible
-      conflict_file.dirname.parent.rmdir_if_possible
-      conflict_file.dirname.parent.parent.rmdir_if_possible
+      Utils::Path.rmdir_if_possible(conflict_file.dirname)
+      Utils::Path.rmdir_if_possible(conflict_file.dirname.parent)
+      Utils::Path.rmdir_if_possible(conflict_file.dirname.parent.parent)
     end
 
     it "does not allow untracked conflicts for related formula families" do
@@ -1188,6 +1188,7 @@ RSpec.describe Formula do
     end
 
     allow(Tab).to receive(:for_formula).with(f).and_return(f.build)
+    allow(f).to receive(:odeprecated)
     allow(f).to receive(:post_install) { env = ENV.to_hash }
     expect(Dir).to receive(:mktmpdir).with("#{f.name}-postinstall-", HOMEBREW_TEMP).and_call_original
 
@@ -1212,6 +1213,7 @@ RSpec.describe Formula do
     allow(Tab).to receive(:for_formula).with(f).and_return(f.build)
     allow(f).to receive_messages(post_install_steps_defined?: true, post_install_defined?: true)
     expect(f).to receive(:run_post_install_steps).ordered
+    expect(f).to receive(:odeprecated).with("`post_install`", "`post_install_steps`").ordered
     expect(f).to receive(:post_install).ordered
 
     f.run_post_install
@@ -2082,7 +2084,7 @@ RSpec.describe Formula do
       f2.brew { f2.install }
       f3.brew { f3.install }
 
-      expect(f1.prefix).to eq((HOMEBREW_PINNED_KEGS/f1.name).resolved_path)
+      expect(f1.prefix).to eq(Utils::Path.resolved_path(HOMEBREW_PINNED_KEGS/f1.name))
       expect(f1).to be_latest_version_installed
       expect(f2).to be_latest_version_installed
       expect(f3).to be_latest_version_installed
@@ -3290,8 +3292,8 @@ RSpec.describe Formula do
         FormulaSpecificationError, "testball: formula requires at least a URL"
       )
 
-      expect { described_class.all(eval_all: true) }.not_to raise_error
-      expect(described_class.all(eval_all: true)).to eq([])
+      expect { described_class.all }.not_to raise_error
+      expect(described_class.all).to eq([])
     end
 
     it "skips untrusted tap formulae when trust is enabled" do
@@ -3305,20 +3307,16 @@ RSpec.describe Formula do
       allow(described_class).to receive_messages(core_names: [], tap_files: [formula_path])
       expect(Formulary).not_to receive(:factory).with(formula_path)
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        expect { expect(described_class.all(eval_all: true)).to eq([]) }
-          .to output(%r{Skipping thirdparty/foo because it is not trusted}).to_stderr
-      end
+      expect { expect(described_class.all).to eq([]) }
+        .to output(%r{Skipping thirdparty/foo because it is not trusted}).to_stderr
     ensure
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"
     end
 
-    it "allows all formulae when trust is enabled" do
+    it "loads trusted formulae by default" do
       allow(described_class).to receive_messages(core_names: [], tap_files: [])
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        expect(described_class.all).to eq([])
-      end
+      expect(described_class.all).to eq([])
     end
   end
 

@@ -13,7 +13,7 @@ module Homebrew
           extensions = Homebrew::Bundle.extensions
           usage_banner <<~EOS
             `brew bundle add` <name> [...]:
-            Add entries to your `Brewfile`. Adds formulae by default. Use #{["`--cask`", "`--tap`", *extensions.select(&:add_supported?).map { |extension| "`--#{extension.flag}`" }].to_sentence} to add the corresponding entry instead.
+            Add entries to your `Brewfile`. Adds formulae by default. Use #{Homebrew.to_sentence(["`--cask`", "`--tap`", *extensions.select(&:add_supported?).map { |extension| "`--#{extension.flag}`" }])} to add the corresponding entry instead.
           EOS
           named_args min: 1
           switch "--install",
@@ -38,7 +38,7 @@ module Homebrew
                               "`$HOMEBREW_BUNDLE_NO_DESCRIBE` is set.",
                  env:         :bundle_describe,
                  replacement: "the default behaviour",
-                 odeprecated: true
+                 odisabled:   true
           conflicts "--describe", "--no-describe"
         end
 
@@ -64,7 +64,7 @@ module Homebrew
             type:,
             global:   context.global,
             file:     context.file,
-            describe: args.describe? && !args.no_describe?,
+            describe: !args.no_describe?,
           )
         end
       end

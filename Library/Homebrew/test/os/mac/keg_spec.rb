@@ -66,7 +66,7 @@ RSpec.describe Keg do
     it "signs patched binaries using ruby-macho on Apple Silicon" do
       allow(Hardware::CPU).to receive(:arm?).and_return(true)
       expect(keg).not_to receive(:system_command).with("codesign", any_args)
-      expect(keg).not_to receive(:quiet_system).with("codesign", any_args)
+      expect(Homebrew).not_to receive(:quiet_system).with("codesign", any_args)
       expect(MachO).to receive(:codesign!).with(file)
 
       keg.codesign_patched_binary(file)
@@ -78,7 +78,7 @@ RSpec.describe Keg do
       expect(keg).to receive(:system_command)
         .with("codesign", args: ["--verify", file], print_stderr: false)
         .and_return(instance_double(SystemCommand::Result, stderr: "#{file}: invalid signature"))
-      expect(keg).to receive(:quiet_system)
+      expect(Homebrew).to receive(:quiet_system)
         .with("codesign", "--sign", "-", "--force",
               "--preserve-metadata=entitlements,requirements,flags,runtime", file)
         .and_return(true)
@@ -92,7 +92,7 @@ RSpec.describe Keg do
       expect(keg).to receive(:system_command)
         .with("codesign", args: ["--verify", file], print_stderr: false)
         .and_return(instance_double(SystemCommand::Result, stderr: "#{file}: code object is not signed at all"))
-      expect(keg).not_to receive(:quiet_system).with("codesign", any_args)
+      expect(Homebrew).not_to receive(:quiet_system).with("codesign", any_args)
 
       keg.codesign_patched_binary(file)
     end
@@ -111,7 +111,7 @@ RSpec.describe Keg do
     before do
       file.dirname.mkpath
       touch file
-      allow(file).to receive(:ensure_writable).and_yield
+      allow(Utils::Path).to receive(:ensure_writable).with(file.to_path).and_yield
       allow(file).to receive(:save_changes)
       allow(file).to receive_messages(dylib?: false, dynamically_linked_libraries: ["#{HOMEBREW_PREFIX}/lib/foo"],
                                       rpaths: [])
@@ -147,7 +147,7 @@ RSpec.describe Keg do
     before do
       file.dirname.mkpath
       touch file
-      allow(file).to receive(:ensure_writable).and_yield
+      allow(Utils::Path).to receive(:ensure_writable).with(file.to_path).and_yield
       allow(file).to receive(:save_changes)
       allow(file).to receive_messages(dylib?: false, rpaths: [],
                                       dynamically_linked_libraries: ["#{Keg::PREFIX_PLACEHOLDER}/lib/foo"])

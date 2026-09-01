@@ -290,7 +290,7 @@ module Homebrew
                                  cask_names.map { |name| Formatter.identifier(name) }
         return if combined_fetch_targets.empty?
 
-        "Fetching downloads for: #{combined_fetch_targets.to_sentence}"
+        "Fetching downloads for: #{Homebrew.to_sentence(combined_fetch_targets)}"
       end
 
       # Leave the cask downloads queued so the caller fetches them alongside
@@ -690,7 +690,7 @@ module Homebrew
       def outdated_kegs(formula)
         [formula, *formula.old_installed_formulae].map(&:linked_keg)
                                                   .select(&:directory?)
-                                                  .map { |k| Keg.new(k.resolved_path) }
+                                                  .map { |k| Keg.new(Utils::Path.resolved_path(k)) }
       end
 
       sig { void }

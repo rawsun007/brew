@@ -127,11 +127,6 @@ module Homebrew
 
       protected
 
-      sig { returns(T::Hash[String, String]) }
-      def require_current_tap_trust_env
-        { "HOMEBREW_REQUIRE_TAP_TRUST" => "1" }
-      end
-
       sig { returns(T.nilable(Pathname)) }
       def cached_event_json
         return unless (event_json = artifact_cache/"event.json").exist?

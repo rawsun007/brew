@@ -25,7 +25,7 @@ module Homebrew
           raise UsageError, "`#{args.named.first}` is not a valid Ruby command!"
         end
 
-        brew_rb = (HOMEBREW_LIBRARY_PATH/"brew.rb").resolved_path
+        brew_rb = Utils::Path.resolved_path(HOMEBREW_LIBRARY_PATH/"brew.rb")
         debugger_method = if args.open?
           "open"
         else

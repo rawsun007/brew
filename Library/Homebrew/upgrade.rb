@@ -96,7 +96,7 @@ module Homebrew
         sorted = dependency_graph.tsort_with_cycles do |cycles|
           raise CyclicDependencyError, cycles if Homebrew::EnvConfig.developer?
 
-          odebug "Ignoring cyclic dependencies: #{cycles.map(&:to_sentence).join(", ")}"
+          odebug "Ignoring cyclic dependencies: #{cycles.map { |cycle| Homebrew.to_sentence(cycle) }.join(", ")}"
         end
         formulae_to_install = sorted & formulae_to_install
 
@@ -253,7 +253,7 @@ module Homebrew
       def outdated_kegs(formula)
         [formula, *formula.old_installed_formulae].map(&:linked_keg)
                                                   .select(&:directory?)
-                                                  .map { |k| Keg.new(k.resolved_path) }
+                                                  .map { |k| Keg.new(Utils::Path.resolved_path(k)) }
       end
 
       sig { params(formula: Formula, fi_options: Options).void }
@@ -626,7 +626,7 @@ module Homebrew
         verbose: false
       )
         keg = if formula.optlinked?
-          Keg.new(formula.opt_prefix.resolved_path)
+          Keg.new(Utils::Path.resolved_path(formula.opt_prefix))
         else
           formula.installed_kegs.find(&:optlinked?)
         end

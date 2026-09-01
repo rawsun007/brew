@@ -2,6 +2,11 @@
 # frozen_string_literal: true
 
 RSpec.describe Cask::Artifact::PostflightBlock, :cask do
+  before do
+    ENV["HOMEBREW_DEVELOPER"] = nil
+    Homebrew.raise_deprecation_exceptions = false
+  end
+
   describe "install_phase" do
     it "calls the specified block after installing, passing a Cask mini-dsl" do
       called = T.let(false, T::Boolean)

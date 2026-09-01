@@ -89,5 +89,56 @@ RSpec.describe Homebrew do
       expect { described_class.safe_system("false") }.to raise_error(ErrorDuringExecution)
     end
   end
+
+  describe ".safe_system_brew" do
+    it "runs the current brew executable" do
+      expect(described_class).to receive(:safe_system).with(HOMEBREW_BREW_FILE, "install", "testball")
+
+      described_class.safe_system_brew("install", "testball")
+    end
+  end
+
+  describe ".to_sentence" do
+    specify do
+      expect(described_class.to_sentence([])).to eq("")
+      expect(described_class.to_sentence(["one"])).to eq("one")
+      expect(described_class.to_sentence(["one", "two"])).to eq("one and two")
+      expect(described_class.to_sentence(["one", "two", "three"])).to eq("one, two and three")
+      expect(described_class.to_sentence([1])).to eq("1")
+      expect(described_class.to_sentence([nil, "one", "", "two", "three"])).to eq(", one, , two and three")
+      expect(described_class.to_sentence([""])).not_to be_frozen
+      expect(described_class.to_sentence(["one"])).not_to be_frozen
+      expect(described_class.to_sentence(["one", "two"])).not_to be_frozen
+      expect(described_class.to_sentence(["one", "two", "three"])).not_to be_frozen
+    end
+
+    it "converts values to a sentence with custom connectors" do
+      expect(described_class.to_sentence(["one", "two", "three"], words_connector: " "))
+        .to eq("one two and three")
+      expect(described_class.to_sentence(["one", "two", "three"], words_connector: " & "))
+        .to eq("one & two and three")
+      expect(described_class.to_sentence(["one", "two", "three"], last_word_connector: ", and also "))
+        .to eq("one, two, and also three")
+      expect(described_class.to_sentence(["one", "two", "three"], last_word_connector: " "))
+        .to eq("one, two three")
+      expect(described_class.to_sentence(["one", "two"], two_words_connector: " ")).to eq("one two")
+    end
+
+    it "creates a new string" do
+      elements = ["one"]
+      expect(described_class.to_sentence(elements).object_id).not_to eq(elements[0].object_id)
+    end
+  end
+
+  describe ".assert_valid_keys" do
+    it "accepts valid keys" do
+      expect { described_class.assert_valid_keys({ name: "Homebrew" }, :name) }.not_to raise_error
+    end
+
+    it "rejects invalid keys" do
+      expect { described_class.assert_valid_keys({ name: "Homebrew" }, :version) }
+        .to raise_error(ArgumentError, "Unknown key: :name. Valid keys are: :version")
+    end
+  end
 end
 # rubocop:enable Style/GlobalVars

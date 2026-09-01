@@ -52,7 +52,7 @@ module Homebrew
     T::Sig::WithoutRuntime.sig {
       params(
         string_or_regex: T.any(Regexp, String),
-        # These must define `cask?`, `eval_all?`, and `formula?` methods.
+        # These must define `cask?` and `formula?` methods.
         # Since only one command is typically loaded at a time, this alias is not expected to be available at runtime.
         args:            T.any(Homebrew::Cmd::Desc::Args, Homebrew::Cmd::SearchCmd::Args),
         search_type:     T.nilable(Descriptions::SearchField),
@@ -64,28 +64,12 @@ module Homebrew
 
       search_type ||= Descriptions::SearchField::Description
       both = !args.formula? && !args.cask?
-      eval_all = args.eval_all? || Homebrew::EnvConfig.tap_trust_configured?
 
       if args.formula? || both
         ohai "Formulae"
-        if eval_all
-          CacheStoreDatabase.use(:descriptions) do |db|
-            cache_store = DescriptionCacheStore.new(T.cast(db, CacheStoreDatabase[String, T.anything]))
-            Descriptions.search(string_or_regex, search_type, cache_store, eval_all:).print
-          end
-        else
-          unofficial = Tap.all.sum { |tap| tap.official? ? 0 : tap.formula_files.size }
-          if unofficial.positive?
-            opoo "Set `HOMEBREW_REQUIRE_TAP_TRUST=1` or `HOMEBREW_NO_REQUIRE_TAP_TRUST=1` to search " \
-                 "#{unofficial} additional " \
-                 "#{Utils.pluralize("formula", unofficial)} in third party taps."
-          end
-          formulae = Homebrew::API::Internal.formula_hashes
-          descriptions = formulae.transform_values { |data| data["desc"] }
-          status_data = formulae.transform_values do |data|
-            { deprecated: data["deprecate_present"].present?, disabled: data["disable_present"].present? }
-          end
-          Descriptions.search(string_or_regex, search_type, descriptions, status_data:, eval_all:).print
+        CacheStoreDatabase.use(:descriptions) do |db|
+          cache_store = DescriptionCacheStore.new(T.cast(db, CacheStoreDatabase[String, T.anything]))
+          Descriptions.search(string_or_regex, search_type, cache_store).print
         end
       end
       return if !args.cask? && !both
@@ -93,24 +77,9 @@ module Homebrew
       puts if both
 
       ohai "Casks"
-      if eval_all
-        CacheStoreDatabase.use(:cask_descriptions) do |db|
-          cache_store = CaskDescriptionCacheStore.new(T.cast(db, CacheStoreDatabase[String, T.anything]))
-          Descriptions.search(string_or_regex, search_type, cache_store, eval_all:).print(show_missing:)
-        end
-      else
-        unofficial = Tap.all.sum { |tap| tap.official? ? 0 : tap.cask_files.size }
-        if unofficial.positive?
-          opoo "Set `HOMEBREW_REQUIRE_TAP_TRUST=1` or `HOMEBREW_NO_REQUIRE_TAP_TRUST=1` to search " \
-               "#{unofficial} additional " \
-               "#{Utils.pluralize("cask", unofficial)} in third party taps."
-        end
-        casks = Homebrew::API::Internal.cask_hashes
-        descriptions = casks.transform_values { |cask| [cask["names"].join(", "), cask["desc"]] }
-        status_data = casks.transform_values do |cask|
-          { deprecated: cask["deprecate_present"].present?, disabled: cask["disable_present"].present? }
-        end
-        Descriptions.search(string_or_regex, search_type, descriptions, status_data:, eval_all:).print(show_missing:)
+      CacheStoreDatabase.use(:cask_descriptions) do |db|
+        cache_store = CaskDescriptionCacheStore.new(T.cast(db, CacheStoreDatabase[String, T.anything]))
+        Descriptions.search(string_or_regex, search_type, cache_store).print(show_missing:)
       end
     end
 

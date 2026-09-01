@@ -367,17 +367,13 @@ RSpec.describe Cask::CaskLoader, :cask do
         end
       RUBY
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        expect { Cask::CaskLoader::FromPathLoader.new(cask_file).load(config: nil) }
-          .to raise_error(Homebrew::UntrustedTapError, %r{thirdparty/foo})
-      end
+      expect { Cask::CaskLoader::FromPathLoader.new(cask_file).load(config: nil) }
+        .to raise_error(Homebrew::UntrustedTapError, %r{thirdparty/foo})
 
       Homebrew::Trust.trust!(:cask, "thirdparty/foo/sensitive-env")
 
-      with_env(HOMEBREW_REQUIRE_TAP_TRUST: "1") do
-        expect(Cask::CaskLoader::FromPathLoader.new(cask_file).load(config: nil).full_name)
-          .to eq("thirdparty/foo/sensitive-env")
-      end
+      expect(Cask::CaskLoader::FromPathLoader.new(cask_file).load(config: nil).full_name)
+        .to eq("thirdparty/foo/sensitive-env")
     ensure
       Homebrew::Trust.clear!(:cask)
       FileUtils.rm_rf HOMEBREW_TAP_DIRECTORY/"thirdparty"

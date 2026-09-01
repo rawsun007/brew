@@ -32,11 +32,11 @@ module Homebrew
       def pkill_if_needed
         pgrep = ["pgrep", "-f", HOMEBREW_CELLAR.to_s]
 
-        return unless quiet_system(*pgrep)
+        return unless Homebrew.quiet_system(*pgrep)
 
         test "pkill", "-f", HOMEBREW_CELLAR.to_s
 
-        return unless quiet_system(*pgrep)
+        return unless Homebrew.quiet_system(*pgrep)
 
         sleep 1
         test "pkill", "-9", "-f", HOMEBREW_CELLAR.to_s if system(*pgrep)

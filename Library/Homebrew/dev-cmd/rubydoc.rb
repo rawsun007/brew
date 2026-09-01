@@ -29,9 +29,10 @@ module Homebrew
 
           output_dir = dir/"doc"
 
-          safe_system "bundle", "exec", "yard", "doc", "--fail-on-warning", *no_api_args, "--output", output_dir
+          Homebrew.safe_system "bundle", "exec", "yard", "doc", "--fail-on-warning", *no_api_args, "--output",
+                               output_dir
 
-          exec_browser "file://#{output_dir}/index.html" if args.open?
+          Homebrew.exec_browser "file://#{output_dir}/index.html" if args.open?
         end
       end
     end

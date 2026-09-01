@@ -35,12 +35,11 @@ class DescriptionCacheStore < CacheStore
   # If the database is empty `update!` it with all known formulae.
   #
   # @return [nil]
-  sig { params(eval_all: T::Boolean).void }
-  def populate_if_empty!(eval_all: Homebrew::EnvConfig.tap_trust_configured?)
-    return unless eval_all
+  sig { void }
+  def populate_if_empty!
     return unless database.empty?
 
-    Formula.all(eval_all:).each { |f| update!(f.full_name, f.desc) }
+    Formula.all.each { |formula| update!(formula.full_name, formula.desc) }
   end
 
   # Use an update report to update the {DescriptionCacheStore}.
@@ -49,10 +48,6 @@ class DescriptionCacheStore < CacheStore
   # @return [nil]
   sig { params(report: ReporterHub).void }
   def update_from_report!(report)
-    unless Homebrew::EnvConfig.tap_trust_configured?
-      database.clear!
-      return
-    end
     return populate_if_empty! if database.empty?
     return if report.empty?
 
@@ -78,10 +73,6 @@ class DescriptionCacheStore < CacheStore
   # @return [nil]
   sig { params(formula_names: T::Array[String]).void }
   def update_from_formula_names!(formula_names)
-    unless Homebrew::EnvConfig.tap_trust_configured?
-      database.clear!
-      return
-    end
     return populate_if_empty! if database.empty?
 
     formula_names.each do |name|

@@ -4,8 +4,8 @@
 require "rubocops/rubocop-cask"
 
 RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
-  it "allows a flight block after matching steps in third-party taps during migration" do
-    expect_no_offenses <<~CASK, "/Taps/example/homebrew-cask/Casks/f/foo.rb"
+  it "rejects a flight block after matching steps in third-party taps" do
+    expect_offense <<~CASK, "/Taps/example/homebrew-cask/Casks/f/foo.rb"
       cask "foo" do
         version :latest
         sha256 :no_check
@@ -15,6 +15,7 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
         end
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           touch "foo"
         end
       end
@@ -32,7 +33,7 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
         end
 
         postflight do
-        ^^^^^^^^^^^^^ Casks in official Homebrew taps must use `postflight_steps` instead of `postflight`.
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           touch "foo"
         end
       end
@@ -360,12 +361,13 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
   end
 
   it "does not autocorrect altered or mixed keychain deletion blocks" do
-    expect_no_offenses <<~CASK
+    expect_offense <<~CASK
       cask "foo" do
         version :latest
         sha256 :no_check
 
         uninstall_postflight do
+        ^^^^^^^^^^^^^^^^^^^^^^^ Casks must use `uninstall_postflight_steps` instead of `uninstall_postflight`.
           stdout, * = system_command "/usr/local/bin/security",
                                      args: ["find-certificate", "-a", "-c", "Charles", "-Z"],
                                      sudo: true
@@ -379,12 +381,13 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
       end
     CASK
 
-    expect_no_offenses <<~CASK
+    expect_offense <<~CASK
       cask "foo" do
         version :latest
         sha256 :no_check
 
         uninstall_postflight do
+        ^^^^^^^^^^^^^^^^^^^^^^^ Casks must use `uninstall_postflight_steps` instead of `uninstall_postflight`.
           stdout, * = system_command "/usr/bin/security",
                                      args: ["find-certificate", "-a", "-c", "Charles", "-Z", "login.keychain"],
                                      sudo: true
@@ -398,12 +401,13 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
       end
     CASK
 
-    expect_no_offenses <<~CASK
+    expect_offense <<~CASK
       cask "foo" do
         version :latest
         sha256 :no_check
 
         uninstall_postflight do
+        ^^^^^^^^^^^^^^^^^^^^^^^ Casks must use `uninstall_postflight_steps` instead of `uninstall_postflight`.
           stdout, * = system_command "/usr/bin/security",
                                      args: ["find-certificate", "-a", "-c", "Charles", "-Z"],
                                      sudo: true
@@ -489,45 +493,49 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
   end
 
   it "does not autocorrect dynamic, unsupported or mixed permission work" do
-    expect_no_offenses <<~'CASK'
+    expect_offense <<~'CASK'
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           set_ownership "#{staged_path}/foo-#{arch}"
         end
       end
     CASK
 
-    expect_no_offenses <<~'CASK'
+    expect_offense <<~'CASK'
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           set_permissions "#{staged_path}/Foo.app", "0755", recursive: false
         end
       end
     CASK
 
-    expect_no_offenses <<~'CASK'
+    expect_offense <<~'CASK'
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           set_ownership ["#{staged_path}/Foo.app", "#{appdir}/Foo.app"]
         end
       end
     CASK
 
-    expect_no_offenses <<~'CASK'
+    expect_offense <<~'CASK'
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           set_permissions "#{staged_path}/Foo.app", "0755"
           system_command "/usr/bin/true"
         end
@@ -561,12 +569,13 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
   end
 
   it "does not autocorrect non-file preparation in flight blocks" do
-    expect_no_offenses <<~CASK
+    expect_offense <<~CASK
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           system_command "/usr/bin/true"
         end
       end
@@ -574,12 +583,13 @@ RSpec.describe RuboCop::Cop::Cask::InstallSteps, :config do
   end
 
   it "does not autocorrect formula rebuild actions in flight blocks" do
-    expect_no_offenses <<~CASK
+    expect_offense <<~CASK
       cask "foo" do
         version :latest
         sha256 :no_check
 
         postflight do
+        ^^^^^^^^^^^^^ Casks must use `postflight_steps` instead of `postflight`.
           system Formula["desktop-file-utils"].opt_bin/"update-desktop-database", HOMEBREW_PREFIX/"share/applications"
         end
       end

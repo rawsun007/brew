@@ -21,7 +21,8 @@ module Homebrew
         sig { params(args: T.untyped).void }
         def dispatch(args)
           # pbpaste's exit status is a proxy for detecting the use of reattach-to-user-namespace
-          if ENV.fetch("HOMEBREW_TMUX", nil) && File.exist?("/usr/bin/pbpaste") && !quiet_system("/usr/bin/pbpaste")
+          if ENV.fetch("HOMEBREW_TMUX",
+                       nil) && File.exist?("/usr/bin/pbpaste") && !Homebrew.quiet_system("/usr/bin/pbpaste")
             raise UsageError,
                   "`brew services` cannot run under tmux!"
           end

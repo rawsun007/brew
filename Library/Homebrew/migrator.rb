@@ -253,7 +253,7 @@ class Migrator
         brew upgrade #{newname}
     EOS
   rescue Interrupt
-    ignore_interrupts { backup_oldname }
+    Homebrew.ignore_interrupts { backup_oldname }
   # Any exception means the migration did not complete.
   rescue Exception => e # rubocop:disable Lint/RescueException
     onoe "The migration did not complete successfully."
@@ -263,7 +263,7 @@ class Migrator
       puts Utils::Backtrace.clean(e)
     end
     puts "Backing up..."
-    ignore_interrupts { backup_oldname }
+    Homebrew.ignore_interrupts { backup_oldname }
   ensure
     unlock
   end
@@ -410,7 +410,7 @@ class Migrator
         require "utils/backtrace"
         puts Utils::Backtrace.clean(e)
       end
-      ignore_interrupts { new_keg.unlink(verbose: verbose?) }
+      Homebrew.ignore_interrupts { new_keg.unlink(verbose: verbose?) }
       raise
     end
   end
@@ -450,7 +450,7 @@ class Migrator
       next if new_linked_keg_record.realpath != old_opt_record.realpath
 
       old_opt_record.unlink
-      old_opt_record.parent.rmdir_if_possible
+      Utils::Path.rmdir_if_possible(old_opt_record.parent)
     end
   end
 

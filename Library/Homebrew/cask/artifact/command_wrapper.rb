@@ -24,7 +24,7 @@ module Cask
       }
       def self.from_args(cask, name, options = nil)
         options ||= {}
-        options.assert_valid_keys(:content, :executable, :args, :env)
+        Homebrew.assert_valid_keys(options, :content, :executable, :args, :env)
 
         new(cask, name, **options)
       end

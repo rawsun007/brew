@@ -37,7 +37,7 @@ module Homebrew
 
       sig { override.void }
       def run
-        safe_system "git", "-C", HOMEBREW_REPOSITORY, "fetch", "origin" if Homebrew::EnvConfig.no_auto_update?
+        Homebrew.safe_system "git", "-C", HOMEBREW_REPOSITORY, "fetch", "origin" if Homebrew::EnvConfig.no_auto_update?
 
         require "utils/github"
 
@@ -226,7 +226,7 @@ module Homebrew
           releases_page_url
         end
         puts "  #{Formatter.url(release_url)}"
-        exec_browser release_url
+        Homebrew.exec_browser release_url
       end
 
       sig { params(name: String).returns(T::Array[T::Hash[String, T.untyped]]) }

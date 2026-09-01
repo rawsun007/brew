@@ -57,7 +57,7 @@ module Homebrew
             return
           end
 
-          safe_system pager, *args.named.to_paths
+          Homebrew.safe_system pager, *args.named.to_paths
         end
       end
     end

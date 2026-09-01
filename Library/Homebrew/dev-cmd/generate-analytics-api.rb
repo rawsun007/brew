@@ -68,7 +68,7 @@ module Homebrew
 
       sig { override.void }
       def run
-        safe_system HOMEBREW_BREW_FILE, "formula-analytics", "--setup"
+        Homebrew.safe_system_brew "formula-analytics", "--setup"
 
         directories = ["_data/analytics", "api/analytics"]
         FileUtils.rm_rf directories

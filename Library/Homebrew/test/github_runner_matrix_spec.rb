@@ -408,6 +408,6 @@ RSpec.describe GitHubRunnerMatrix, :no_api do
     end
 
     stub_formula_loader f
-    TestRunnerFormula.new(f, eval_all: true)
+    TestRunnerFormula.new(f, include_uninstalled: true)
   end
 end

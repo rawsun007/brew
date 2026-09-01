@@ -14,12 +14,11 @@ class CaskDescriptionCacheStore < DescriptionCacheStore
   # If the database is empty `update!` it with all known casks.
   #
   # @return [nil]
-  sig { override.params(eval_all: T::Boolean).void }
-  def populate_if_empty!(eval_all: Homebrew::EnvConfig.tap_trust_configured?)
-    return unless eval_all
+  sig { override.void }
+  def populate_if_empty!
     return unless database.empty?
 
-    Cask::Cask.all(eval_all:)
+    Cask::Cask.all
               .each { |c| update!(c.full_name, [c.name.join(", "), c.desc.presence]) }
   end
 
@@ -29,10 +28,6 @@ class CaskDescriptionCacheStore < DescriptionCacheStore
   # @return [nil]
   sig { override.params(report: ReporterHub).void }
   def update_from_report!(report)
-    unless Homebrew::EnvConfig.tap_trust_configured?
-      database.clear!
-      return
-    end
     return populate_if_empty! if database.empty?
     return if report.empty?
 
@@ -53,10 +48,6 @@ class CaskDescriptionCacheStore < DescriptionCacheStore
   # @return [nil]
   sig { params(cask_tokens: T::Array[String]).void }
   def update_from_cask_tokens!(cask_tokens)
-    unless Homebrew::EnvConfig.tap_trust_configured?
-      database.clear!
-      return
-    end
     return populate_if_empty! if database.empty?
 
     cask_tokens.each do |token|
