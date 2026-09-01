@@ -6,4 +6,5 @@ require "dev-cmd/generate-cask-token"
 
 RSpec.describe Homebrew::DevCmd::GenerateCaskToken do
   it_behaves_like "parseable arguments"
+  it_behaves_like "a documented command", "generate-cask-token"
 end

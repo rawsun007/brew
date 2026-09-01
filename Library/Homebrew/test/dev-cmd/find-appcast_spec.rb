@@ -6,4 +6,5 @@ require "dev-cmd/find-appcast"
 
 RSpec.describe Homebrew::DevCmd::FindAppcast do
   it_behaves_like "parseable arguments"
+  it_behaves_like "a documented command", "find-appcast"
 end
