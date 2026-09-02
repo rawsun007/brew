@@ -17,19 +17,22 @@ module Homebrew
       # Create a new `Service` instance from either a path or label.
       sig { params(path_or_label: T.any(Pathname, String)).returns(T.nilable(FormulaWrapper)) }
       def self.from(path_or_label)
-        return unless path_or_label =~ path_or_label_regex
+        label = path_or_label.to_s.sub(/\.(plist|service)\z/, "")
+        match = label.match(path_or_label_regex)
+        return unless match
 
         begin
-          new(Formulary.factory(T.must(Regexp.last_match(1))))
+          new(Formulary.factory(T.must(match[2])), service_name: T.must(match[1]))
         rescue
           nil
         end
       end
 
       # Initialize a new `Service` instance with supplied formula.
-      sig { params(formula: Formula).void }
-      def initialize(formula)
+      sig { params(formula: Formula, service_name: T.nilable(String)).void }
+      def initialize(formula, service_name: nil)
         @formula = formula
+        @service_name_override = service_name
         @status_output_success_type = T.let(nil, T.nilable(StatusOutputSuccessType))
 
         return if System.launchctl? || System.systemctl?
@@ -80,23 +83,46 @@ module Homebrew
       def service_name
         @service_name ||= T.let(
           if System.launchctl?
-            formula.plist_name
+            @service_name_override || formula.plist_name
           else # System.systemctl?
-            formula.service_name
+            @service_name_override || formula.service_name
           end, T.nilable(String)
+        )
+      end
+
+      sig { returns(T::Array[String]) }
+      def service_names
+        @service_names ||= T.let(
+          if @service_name_override
+            [@service_name_override]
+          elsif System.launchctl?
+            formula.plist_names
+          else # System.systemctl?
+            [formula.service_name]
+          end, T.nilable(T::Array[String])
         )
       end
 
       # service_file delegates with formula.launchd_service_path or formula.systemd_service_path for systemd.
       sig { returns(Pathname) }
       def service_file
-        @service_file ||= T.let(
+        service_files.fetch(0)
+      end
+
+      sig { returns(T::Array[Pathname]) }
+      def service_files
+        @service_files ||= T.let(
           if System.launchctl?
-            formula.launchd_service_path
+            formula.launchd_service_paths
           else # System.systemctl?
-            formula.systemd_service_path
-          end, T.nilable(Pathname)
+            [formula.systemd_service_path]
+          end, T.nilable(T::Array[Pathname])
         )
+      end
+
+      sig { returns(Pathname) }
+      def source_service_file
+        service_files.find(&:exist?) || service_file
       end
 
       sig { returns(Pathname) }
@@ -135,7 +161,26 @@ module Homebrew
       # Path to destination service. If run as root, it's in `boot_path`, else `user_path`.
       sig { returns(Pathname) }
       def dest
-        dest_dir + service_file.basename
+        dests.fetch(0)
+      end
+
+      sig { returns(T::Array[Pathname]) }
+      def dests
+        if System.launchctl?
+          service_names.map { |name| dest_dir/service_file_basename(name) }
+        else
+          [dest_dir/service_file.basename]
+        end
+      end
+
+      sig { returns(Pathname) }
+      def registered_dest
+        if System.launchctl?
+          active_dest = dest_dir/service_file_basename(active_service_name)
+          return active_dest if active_dest.exist?
+        end
+
+        dests.find(&:exist?) || dest
       end
 
       # Returns `true` if any version of the formula is installed.
@@ -160,6 +205,19 @@ module Homebrew
         end
       end
 
+      sig { returns(T::Array[String]) }
+      def loaded_service_names
+        return [service_name] if System.systemctl? && loaded?
+        return [] unless System.launchctl?
+
+        service_names.select { |name| System.launchctl_service_running?(name) }
+      end
+
+      sig { returns(String) }
+      def active_service_name
+        status_output_success_type.service_name
+      end
+
       # Returns `true` if service is present (e.g. .plist is present in boot or user service path), else `false`
       # Accepts `type` with values `:root` for boot path or `:user` for user path.
       sig { params(type: T.nilable(Symbol)).returns(T::Boolean) }
@@ -176,11 +234,11 @@ module Homebrew
 
       sig { returns(T.nilable(String)) }
       def owner
-        if System.launchctl? && dest.exist?
+        if System.launchctl? && registered_dest.exist?
           # read the username from the plist file
           require "plist"
           plist = begin
-            Plist.parse_xml(dest.read, marshal: false)
+            Plist.parse_xml(registered_dest.read, marshal: false)
           rescue
             nil
           end
@@ -232,7 +290,7 @@ module Homebrew
       def to_hash
         hash = {
           name:,
-          service_name:,
+          service_name: active_service_name,
           running:      pid?,
           loaded:       loaded?(cached: true),
           schedulable:  timed?,
@@ -240,7 +298,7 @@ module Homebrew
           exit_code:,
           user:         owner,
           status:       status_symbol,
-          file:         service_file_present? ? dest : service_file,
+          file:         service_file_present? ? registered_dest : source_service_file,
           registered:   service_file_present?,
           loaded_file:,
         }
@@ -269,7 +327,7 @@ module Homebrew
       sig { returns(String) }
       def service_contents
         if !service? || !load_service.command?
-          service_file.read
+          source_service_file.read
         elsif System.launchctl?
           load_service.to_plist
         else
@@ -292,15 +350,32 @@ module Homebrew
       sig { returns(StatusOutputSuccessType) }
       def status_output_success_type
         @status_output_success_type ||= if System.launchctl?
-          output, success, type = System.launchctl_find_service(service_name)
-          StatusOutputSuccessType.new(output, success, type)
+          result = T.let(nil, T.nilable(StatusOutputSuccessType))
+          service_names.each do |name|
+            output, success, type = System.launchctl_find_service(name)
+            next unless success
+
+            candidate = StatusOutputSuccessType.new(output, success, type, name)
+            result ||= candidate
+            if status_pid(candidate)&.positive?
+              result = candidate
+              break
+            end
+          end
+          result || StatusOutputSuccessType.new("", false, :launchctl_list, service_name)
         else # System.systemctl?
           cmd = ["status", service_name]
           output = System::Systemctl.popen_read(*cmd).chomp
           success = T.cast($CHILD_STATUS.present? && $CHILD_STATUS.success? && output.present?, T::Boolean)
           odebug [System::Systemctl.executable, System::Systemctl.scope, *cmd].join(" "), output
-          StatusOutputSuccessType.new(output, success, :systemctl)
+          StatusOutputSuccessType.new(output, success, :systemctl, service_name)
         end
+      end
+
+      sig { params(result: StatusOutputSuccessType).returns(T.nilable(Integer)) }
+      def status_pid(result)
+        match = result.output.match(pid_regex(result.type))
+        match[1].to_i if match
       end
 
       sig { returns(String) }
@@ -374,7 +449,7 @@ module Homebrew
         boot_path = System.boot_path
         return false if boot_path.blank?
 
-        (boot_path + service_file.basename).exist?
+        service_names.any? { |name| (boot_path/service_file_basename(name)).exist? }
       end
 
       sig { returns(T::Boolean) }
@@ -382,12 +457,18 @@ module Homebrew
         user_path = System.user_path
         return false if user_path.blank?
 
-        (user_path + service_file.basename).exist?
+        service_names.any? { |name| (user_path/service_file_basename(name)).exist? }
+      end
+
+      sig { params(name: String).returns(String) }
+      def service_file_basename(name)
+        extension = System.launchctl? ? ".plist" : ".service"
+        "#{name}#{extension}"
       end
 
       sig { returns(Regexp) }
       private_class_method def self.path_or_label_regex
-        /homebrew(?>\.mxcl)?\.([\w+-.@]+)(\.plist|\.service)?\z/
+        /(homebrew(?>\.mxcl)?\.([\w+-.@]+))\z/
       end
 
       class StatusOutputSuccessType
@@ -400,11 +481,15 @@ module Homebrew
         sig { returns(Symbol) }
         attr_reader :type
 
-        sig { params(output: String, success: T::Boolean, type: Symbol).void }
-        def initialize(output, success, type)
+        sig { returns(String) }
+        attr_reader :service_name
+
+        sig { params(output: String, success: T::Boolean, type: Symbol, service_name: String).void }
+        def initialize(output, success, type, service_name)
           @output = output
           @success = success
           @type = type
+          @service_name = service_name
         end
       end
     end

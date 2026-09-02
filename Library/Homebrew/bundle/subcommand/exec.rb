@@ -361,13 +361,13 @@ module Homebrew
               next if prefix.nil?
 
               service_file = if Homebrew::Services::System.launchctl?
-                prefix/"#{formula.plist_name}.plist"
+                formula.plist_names.map { |name| prefix/"#{name}.plist" }.find(&:file?)
               else
                 prefix/"#{formula.service_name}.service"
               end
             end
 
-            next unless service_file.file?
+            next unless service_file&.file?
 
             info = services_info.find { |candidate| candidate["name"] == formula.name }
             conflicting_services = services_info.select do |candidate|

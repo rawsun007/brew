@@ -1468,13 +1468,28 @@ class Formula
   sig { returns(String) }
   def plist_name = service.plist_name
 
+  # The generated launchd {.plist} service names, including compatible defaults.
+  sig { returns(T::Array[String]) }
+  def plist_names
+    return [plist_name] if plist_name != service.plist_name
+
+    service.plist_names
+  end
+
   # The generated service name.
   sig { returns(String) }
   def service_name = service.service_name
 
-  # The generated launchd {.service} file path.
+  # The generated launchd {.plist} file path.
   sig { returns(Pathname) }
-  def launchd_service_path = (any_installed_prefix || opt_prefix)/"#{plist_name}.plist"
+  def launchd_service_path = launchd_service_paths.fetch(0)
+
+  # The generated launchd {.plist} file paths, including compatible defaults.
+  sig { returns(T::Array[Pathname]) }
+  def launchd_service_paths
+    prefix = any_installed_prefix || opt_prefix
+    plist_names.map { |name| prefix/"#{name}.plist" }
+  end
 
   # The generated systemd {.service} file path.
   sig { returns(Pathname) }

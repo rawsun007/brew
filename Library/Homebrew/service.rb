@@ -49,6 +49,7 @@ module Homebrew
       @macos_legacy_timers = T.let(false, T::Boolean)
       @nice = T.let(nil, T.nilable(Integer))
       @plist_name = T.let(default_plist_name, String)
+      @plist_name_explicitly_set = T.let(false, T::Boolean)
       @process_type = T.let(nil, T.nilable(Symbol))
       @require_root = T.let(false, T::Boolean)
       @restart_delay = T.let(nil, T.nilable(Integer))
@@ -79,7 +80,24 @@ module Homebrew
 
     sig { returns(String) }
     def default_plist_name
+      legacy_plist_name
+    end
+
+    sig { returns(String) }
+    def legacy_plist_name
       "homebrew.mxcl.#{@formula.name}"
+    end
+
+    sig { returns(String) }
+    def canonical_plist_name
+      "homebrew.#{@formula.name}"
+    end
+
+    sig { returns(T::Array[String]) }
+    def plist_names
+      return [plist_name] if @plist_name_explicitly_set
+
+      [plist_name, canonical_plist_name, legacy_plist_name].uniq
     end
 
     sig { returns(String) }
@@ -96,7 +114,10 @@ module Homebrew
     def name(macos: nil, linux: nil)
       raise TypeError, "Service#name expects at least one String" if [macos, linux].none?(String)
 
-      @plist_name = macos if macos
+      if macos
+        @plist_name = macos
+        @plist_name_explicitly_set = true
+      end
       @service_name = linux if linux
     end
 

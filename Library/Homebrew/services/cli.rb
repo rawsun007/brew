@@ -51,6 +51,13 @@ module Homebrew
         true
       end
 
+      sig { params(service: Services::FormulaWrapper).returns(T.nilable(String)) }
+      def self.compatible_service_loaded_name(service)
+        return unless System.launchctl?
+
+        service.loaded_service_names.find { |name| name != service.service_name }
+      end
+
       # Kill services that don't have a service file
       sig { returns(T::Array[String]) }
       def self.kill_orphaned_services
@@ -102,6 +109,10 @@ module Homebrew
           if service.pid?
             puts "Service `#{service.name}` already running, use `#{bin} restart #{service.name}` to restart."
             next
+          elsif (loaded_name = compatible_service_loaded_name(service))
+            puts "Service `#{service.name}` already loaded as `#{loaded_name}`, " \
+                 "use `#{bin} restart #{service.name}` to restart."
+            next
           elsif System.root?
             puts "Service `#{service.name}` cannot be run (but can be started) as root."
             next
@@ -131,11 +142,15 @@ module Homebrew
           if service.pid?
             puts "Service `#{service.name}` already started, use `#{bin} restart #{service.name}` to restart."
             next
+          elsif (loaded_name = compatible_service_loaded_name(service))
+            puts "Service `#{service.name}` already loaded as `#{loaded_name}`, " \
+                 "use `#{bin} restart #{service.name}` to restart."
+            next
           end
 
           odie "Formula `#{service.name}` is not installed." unless service.installed?
 
-          file ||= if service.service_file.exist? || System.systemctl?
+          file ||= if service.source_service_file.exist? || System.systemctl?
             nil
           elsif service.formula.opt_prefix.exist? &&
                 (keg = Keg.for service.formula.opt_prefix) &&
@@ -175,7 +190,11 @@ module Homebrew
         targets.each do |service|
           unless service.loaded?
             unless keep
-              rm service.dest if service.dest.exist? # get rid of installed service file anyway, dude
+              if System.systemctl?
+                rm service.dest if service.dest.exist?
+              else # System.launchctl?
+                service.dests.each { |dest| rm dest if dest.exist? }
+              end
               rm service.timer_dest if System.systemctl? && service.timed? && service.timer_dest.exist?
             end
             if service.service_file_present?
@@ -183,9 +202,10 @@ module Homebrew
                 Service `#{service.name}` is started as `#{service.owner}`. Try:
                   #{"sudo " unless System.root?}#{bin} stop #{service.name}
               EOS
-            elsif System.launchctl? &&
-                  quiet_system(System.launchctl, "bootout", "#{System.domain_target}/#{service.service_name}")
-              ohai "Successfully stopped `#{service.name}` (label: #{service.service_name})"
+            elsif System.launchctl? && (stopped_name = service.service_names.find do |name|
+              quiet_system(System.launchctl, "bootout", "#{System.domain_target}/#{name}")
+            end)
+              ohai "Successfully stopped `#{service.name}` (label: #{stopped_name})"
             else
               opoo "Service `#{service.name}` is not started."
             end
@@ -211,44 +231,58 @@ module Homebrew
               System::Systemctl.quiet_run(*systemctl_args, "disable", "--now", service.service_name)
             end
           elsif System.launchctl?
+            loaded_service_names = service.loaded_service_names
             dont_wait_statuses = [
               Errno::ESRCH::Errno,
               System::LAUNCHCTL_DOMAIN_ACTION_NOT_SUPPORTED,
             ]
-            System.candidate_domain_targets.each do |domain_target|
-              break unless service.loaded?
+            loaded_service_names.each do |service_name|
+              System.candidate_domain_targets.each do |domain_target|
+                break unless System.launchctl_service_running?(service_name)
 
-              quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
-              unless no_wait
-                time_slept = 0
-                sleep_time = 1
-                max_wait = T.must(max_wait)
-                exit_status = $CHILD_STATUS.exitstatus
-                while dont_wait_statuses.exclude?(exit_status) &&
-                      (exit_status == Errno::EINPROGRESS::Errno || service.loaded?) &&
-                      (max_wait.zero? || time_slept < max_wait)
-                  sleep(sleep_time)
-                  time_slept += sleep_time
-                  quiet_system System.launchctl, "bootout", "#{domain_target}/#{service.service_name}"
+                quiet_system System.launchctl, "bootout", "#{domain_target}/#{service_name}"
+                unless no_wait
+                  time_slept = 0
+                  sleep_time = 1
+                  max_wait = T.must(max_wait)
                   exit_status = $CHILD_STATUS.exitstatus
+                  while dont_wait_statuses.exclude?(exit_status) &&
+                        (exit_status == Errno::EINPROGRESS::Errno ||
+                         System.launchctl_service_running?(service_name)) &&
+                        (max_wait.zero? || time_slept < max_wait)
+                    sleep(sleep_time)
+                    time_slept += sleep_time
+                    quiet_system System.launchctl, "bootout", "#{domain_target}/#{service_name}"
+                    exit_status = $CHILD_STATUS.exitstatus
+                  end
                 end
+                quiet_system System.launchctl, "stop", "#{domain_target}/#{service_name}" if
+                  System.launchctl_service_running?(service_name)
               end
-              service.reset_cache!
-              quiet_system System.launchctl, "stop", "#{domain_target}/#{service.service_name}" if service.pid?
             end
+            service.reset_cache!
           end
 
           unless keep
-            rm service.dest if service.dest.exist?
+            if System.systemctl?
+              rm service.dest if service.dest.exist?
+            else # System.launchctl?
+              service.dests.each { |dest| rm dest if dest.exist? }
+            end
             rm service.timer_dest if System.systemctl? && service.timed? && service.timer_dest.exist?
             # Run daemon-reload on systemctl to finish unloading stopped and deleted service.
             System::Systemctl.run(*systemctl_args, "daemon-reload") if System.systemctl?
           end
 
+          labels = if System.systemctl?
+            [service.service_name]
+          else # System.launchctl?
+            loaded_service_names.presence || service.service_names
+          end
           if service.loaded? || service.pid?
-            opoo "Unable to stop `#{service.name}` (label: #{service.service_name})"
+            opoo "Unable to stop `#{service.name}` (label: #{labels.join(", ")})"
           else
-            ohai "Successfully stopped `#{service.name}` (label: #{service.service_name})"
+            ohai "Successfully stopped `#{service.name}` (label: #{labels.join(", ")})"
           end
         end
       end
@@ -263,21 +297,24 @@ module Homebrew
             puts "Service `#{service.name}` is set to automatically restart and can't be killed."
           else
             puts "Killing `#{service.name}`... (might take a while)"
+            killed_service_names = [service.service_name]
             if System.systemctl?
               System::Systemctl.quiet_run("stop", service.service_name)
             elsif System.launchctl?
-              System.candidate_domain_targets.each do |domain_target|
-                break unless service.pid?
-
-                quiet_system System.launchctl, "stop", "#{domain_target}/#{service.service_name}"
-                service.reset_cache!
+              killed_service_names = service.loaded_service_names
+              killed_service_names.each do |service_name|
+                System.candidate_domain_targets.each do |domain_target|
+                  break if quiet_system System.launchctl, "stop", "#{domain_target}/#{service_name}"
+                end
               end
+              service.reset_cache!
             end
 
+            labels = killed_service_names.presence || [service.service_name]
             if service.pid?
-              opoo "Unable to kill `#{service.name}` (label: #{service.service_name})"
+              opoo "Unable to kill `#{service.name}` (label: #{labels.join(", ")})"
             else
-              ohai "Successfully killed `#{service.name}` (label: #{service.service_name})"
+              ohai "Successfully killed `#{service.name}` (label: #{labels.join(", ")})"
             end
           end
         end
@@ -388,7 +425,7 @@ module Homebrew
         end
 
         if System.launchctl?
-          file ||= enable ? service.dest : service.service_file
+          file ||= enable ? service.dest : service.source_service_file
           service.path_dirs.each(&:mkpath)
           launchctl_load(service, file:, enable:)
         elsif System.systemctl?
@@ -407,7 +444,7 @@ module Homebrew
       def self.install_service_file(service, file)
         raise UsageError, "Formula `#{service.name}` is not installed." unless service.installed?
 
-        unless service.service_file.exist?
+        unless service.source_service_file.exist?
           raise UsageError,
                 "Formula `#{service.name}` has not implemented #plist, #service or provided a locatable service file."
         end
@@ -431,7 +468,7 @@ module Homebrew
         end
         temp.flush
 
-        rm service.dest if service.dest.exist?
+        service.dests.each { |dest| rm dest if dest.exist? }
         service.dest_dir.mkpath unless service.dest_dir.directory?
         cp T.must(temp.path), service.dest
 

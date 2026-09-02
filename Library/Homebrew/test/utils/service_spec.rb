@@ -25,6 +25,20 @@ RSpec.describe Utils::Service do
       expect(described_class.running?(f)).to be true
     end
 
+    it "checks the compatible macOS label when the current label is not running" do
+      f = formula do
+        T.bind(self, T.class_of(Formula))
+        url "foo-1.0"
+      end
+      allow(described_class).to receive(:launchctl?).and_return(true)
+      expect(Homebrew::Services::System).to receive(:launchctl_service_running?)
+        .with("homebrew.mxcl.formula_name").and_return(false)
+      expect(Homebrew::Services::System).to receive(:launchctl_service_running?)
+        .with("homebrew.formula_name").and_return(true)
+
+      expect(described_class.running?(f)).to be true
+    end
+
     it "uses systemctl is-active when systemctl is available" do
       f = formula do
         T.bind(self, T.class_of(Formula))
@@ -36,6 +50,22 @@ RSpec.describe Utils::Service do
         .with(instance_of(Pathname), "is-active", "--quiet", f.service_name)
         .and_return(true)
       expect(described_class.running?(f)).to be true
+    end
+  end
+
+  describe "::installed?" do
+    it "finds a compatible macOS service file" do
+      f = formula do
+        T.bind(self, T.class_of(Formula))
+        url "foo-1.0"
+      end
+      allow(described_class).to receive(:launchctl?).and_return(true)
+      allow(f).to receive(:launchd_service_paths).and_return([
+        instance_double(Pathname, exist?: false),
+        instance_double(Pathname, exist?: true),
+      ])
+
+      expect(described_class.installed?(f)).to be(true)
     end
   end
 

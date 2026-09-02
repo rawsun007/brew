@@ -100,12 +100,12 @@ module Homebrew
             return unless prefix.directory?
 
             service_file = if Homebrew::Services::System.launchctl?
-              prefix/"#{formula.plist_name}.plist"
+              formula.plist_names.map { |name| prefix/"#{name}.plist" }.find(&:file?)
             else
               prefix/"#{formula.service_name}.service"
             end
 
-            service_file if service_file.file?
+            service_file if service_file&.file?
           end
         end
 

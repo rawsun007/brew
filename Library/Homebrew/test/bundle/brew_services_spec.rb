@@ -139,6 +139,7 @@ RSpec.describe Homebrew::Bundle::Brew::Services do
         version:      "1.0",
         rack:         HOMEBREW_CELLAR/"fooformula",
         plist_name:   "homebrew.mxcl.fooformula",
+        plist_names:  ["homebrew.mxcl.fooformula", "homebrew.fooformula"],
         service_name: "fooformula",
       )
     end
@@ -149,12 +150,9 @@ RSpec.describe Homebrew::Bundle::Brew::Services do
         expect(Homebrew::Bundle).to receive(:formula_versions_from_env).with(foo.name).and_return(foo.version)
 
         prefix = foo.rack/"1.0"
-        allow(FileTest).to receive(:directory?).and_call_original
-        expect(FileTest).to receive(:directory?).with(prefix.to_s).and_return(true)
-
+        prefix.mkpath
         service_file = prefix/service_basename
-        allow(FileTest).to receive(:file?).and_call_original
-        expect(FileTest).to receive(:file?).with(service_file.to_s).and_return(true)
+        service_file.write("service")
 
         expect(described_class.versioned_service_file(foo.name)).to eq(service_file)
       end
@@ -168,6 +166,19 @@ RSpec.describe Homebrew::Bundle::Brew::Services do
       let(:service_basename) { "#{foo.plist_name}.plist" }
 
       include_examples "returns the versioned service file"
+
+      it "returns the compatible versioned service file" do
+        expect(Formula).to receive(:[]).with(foo.name).and_return(foo)
+        expect(Homebrew::Bundle).to receive(:formula_versions_from_env).with(foo.name).and_return(foo.version)
+
+        prefix = foo.rack/foo.version
+        prefix.mkpath
+        service_file = prefix/"homebrew.fooformula.plist"
+        (prefix/"homebrew.mxcl.fooformula.plist").unlink if (prefix/"homebrew.mxcl.fooformula.plist").exist?
+        service_file.write("service")
+
+        expect(described_class.versioned_service_file(foo.name)).to eq(service_file)
+      end
     end
 
     context "with systemd" do
